@@ -10,7 +10,6 @@ import { z } from "zod";
 import { DashboardTemplate } from "@/components/templates/DashboardTemplate";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
-import { Spinner } from "@/components/atoms/Spinner";
 import { FormField } from "@/components/molecules/FormField";
 import { CurrencyDisplay } from "@/components/molecules/CurrencyDisplay";
 import { inventarioApi, empresasApi } from "@/lib/api";
@@ -110,10 +109,11 @@ export default function InventarioPage() {
         {/* Filters */}
         <div className="bg-white rounded-xl border p-4 flex gap-4 items-end">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="empresa-filter" className="block text-sm font-medium text-gray-700 mb-1">
               Filtrar por empresa
             </label>
             <select
+              id="empresa-filter"
               value={selectedEmpresa}
               onChange={(e) => setSelectedEmpresa(e.target.value)}
               className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -129,24 +129,30 @@ export default function InventarioPage() {
         </div>
 
         {/* Inventory table */}
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Spinner size="lg" />
-          </div>
-        ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  {["Código", "Producto", "Empresa", "Características", "Precios", "Cantidad", ""].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {(inventario as InventarioItem[])?.map((item) => (
+        <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                {["Código", "Producto", "Empresa", "Características", "Precios", "Cantidad", ""].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {isLoading ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <tr key={i}>
+                    {[60, 80, 70, 90, 100, 40, 20].map((w, j) => (
+                      <td key={j} className="px-4 py-3">
+                        <div className={`h-4 bg-gray-200 rounded animate-pulse`} style={{ width: `${w}%` }} />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                (inventario as InventarioItem[])?.map((item) => (
                   <tr key={item.id} className={`hover:bg-gray-50 ${item.cantidad === 0 ? "opacity-60" : ""}`}>
                     <td className="px-4 py-3 font-mono text-sm">{item.producto_detail.codigo}</td>
                     <td className="px-4 py-3 text-sm font-medium">{item.producto_detail.nombre}</td>
@@ -176,12 +182,14 @@ export default function InventarioPage() {
                             onClick={() => updateCantidad({ id: item.id, cantidad: Number(cantidadValue) })}
                             disabled={savingCantidad}
                             className="text-green-600 hover:text-green-800"
+                            aria-label="Guardar cantidad"
                           >
                             <Check className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => setEditingCantidadId(null)}
                             className="text-gray-400 hover:text-gray-600"
+                            aria-label="Cancelar edición"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -198,25 +206,25 @@ export default function InventarioPage() {
                       <button
                         onClick={() => { setEditingCantidadId(item.id); setCantidadValue(String(item.cantidad)); }}
                         className="text-gray-400 hover:text-brand-600 transition-colors"
-                        title="Editar cantidad"
+                        aria-label="Editar cantidad"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {!inventario?.length && (
-              <div className="text-center py-12 text-gray-500">No hay registros en inventario.</div>
-            )}
-          </div>
-        )}
+                ))
+              )}
+            </tbody>
+          </table>
+          {!isLoading && !inventario?.length && (
+            <div className="text-center py-12 text-gray-500">No hay registros en inventario.</div>
+          )}
+        </div>
 
         {/* Export / Email section */}
         <div className="bg-white rounded-xl border p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Exportar inventario</h3>
+            <h2 className="font-semibold text-gray-900">Exportar inventario</h2>
             {selectedEmpresa ? (
               <span className="text-sm text-gray-500">
                 Empresa:{" "}
@@ -225,7 +233,7 @@ export default function InventarioPage() {
                 </span>
               </span>
             ) : (
-              <span className="text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+              <span className="text-sm text-amber-800 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
                 Selecciona una empresa en el filtro para exportar
               </span>
             )}

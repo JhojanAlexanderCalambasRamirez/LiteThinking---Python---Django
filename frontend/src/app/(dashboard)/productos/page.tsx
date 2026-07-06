@@ -233,7 +233,7 @@ export default function ProductosPage() {
               <h2 className="font-semibold text-gray-900">
                 {editing ? "Editar producto" : "Nuevo producto"}
               </h2>
-              <button onClick={closeForm} className="text-gray-400 hover:text-gray-600">
+              <button onClick={closeForm} className="text-gray-400 hover:text-gray-600" aria-label="Cerrar formulario">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -336,6 +336,7 @@ export default function ProductosPage() {
                               type="button"
                               onClick={() => setPendingPrecios((prev) => prev.filter((x) => x.moneda_codigo !== p.moneda_codigo))}
                               className="text-brand-400 hover:text-brand-700"
+                              aria-label={`Quitar precio ${p.moneda_codigo}`}
                             >
                               <X className="h-3.5 w-3.5" />
                             </button>
@@ -422,7 +423,7 @@ export default function ProductosPage() {
                           <button
                             onClick={() => setAddingPrecioFor(addingPrecioFor === p.id ? null : p.id)}
                             className="text-brand-500 hover:text-brand-700"
-                            title="Agregar precio"
+                            aria-label="Agregar precio"
                           >
                             <PlusCircle className="h-4 w-4" />
                           </button>
@@ -456,7 +457,7 @@ export default function ProductosPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => { setShowForm(false); setEditing(p); }}
-                              title="Editar"
+                              aria-label={`Editar ${p.nombre}`}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -464,7 +465,7 @@ export default function ProductosPage() {
                               variant="danger"
                               size="sm"
                               onClick={() => setConfirmDeleteId(p.id)}
-                              title="Desactivar producto"
+                              aria-label={`Desactivar ${p.nombre}`}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

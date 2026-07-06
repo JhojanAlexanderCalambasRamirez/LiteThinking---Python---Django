@@ -16,7 +16,7 @@ export function CurrencyDisplay({ precios }: CurrencyDisplayProps) {
         >
           <span className="text-gray-500">{p.moneda_simbolo}</span>
           {Number(p.precio).toLocaleString("es-CO", { minimumFractionDigits: 2 })}
-          <span className="text-gray-400">{p.moneda_codigo}</span>
+          <span className="text-gray-600">{p.moneda_codigo}</span>
         </span>
       ))}
     </div>

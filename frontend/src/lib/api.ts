@@ -98,10 +98,10 @@ export const usersApi = {
 
 // --- AI Agent ---
 export const aiAgentApi = {
-  query: (query: string, empresa_nit?: string) =>
+  query: (query: string, empresa_nit?: string, empresa_nombre?: string) =>
     axios.post(
       `${process.env.NEXT_PUBLIC_AI_AGENT_URL}/api/v1/agent/query/`,
-      { query, empresa_nit }
+      { query, empresa_nit, empresa_nombre }
     ),
   search: (query: string, empresa_nit?: string) =>
     axios.post(

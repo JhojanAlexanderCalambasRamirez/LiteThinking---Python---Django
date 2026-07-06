@@ -31,6 +31,7 @@ def get_db():
 class AgentQueryRequest(BaseModel):
     query: str
     empresa_nit: str | None = None
+    empresa_nombre: str | None = None
 
 
 class SemanticSearchRequest(BaseModel):
@@ -54,7 +55,7 @@ async def query_agent(
     Natural language query to the LangChain inventory agent.
     The agent uses pgvector semantic search as a tool.
     """
-    response = await run_agent_query(db, payload.query, payload.empresa_nit)
+    response = await run_agent_query(db, payload.query, payload.empresa_nit, payload.empresa_nombre)
     return {"query": payload.query, "response": response}
 
 

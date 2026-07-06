@@ -63,7 +63,7 @@ export function Navbar() {
               {user?.rol === "admin" ? "Administrador" : "Externo"}
             </Badge>
             <span className="text-sm text-gray-300">{user?.email}</span>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-gray-300 hover:text-white">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-gray-300 hover:text-white" aria-label="Cerrar sesión">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>

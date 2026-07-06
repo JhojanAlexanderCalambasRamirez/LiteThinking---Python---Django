@@ -55,7 +55,7 @@ def _get_llm():
     )
 
 
-def build_inventory_agent(db: Session) -> AgentExecutor:
+def build_inventory_agent(db: Session, empresa_nit: str | None = None, empresa_nombre: str | None = None) -> AgentExecutor:
     """
     Build a LangChain agent with pgvector semantic search tool.
     Uses Groq (primary) or Anthropic (fallback) as the LLM.
@@ -63,13 +63,12 @@ def build_inventory_agent(db: Session) -> AgentExecutor:
     from services.embedding_service import semantic_search_productos
 
     @tool
-    def buscar_productos(query: str, empresa_nit: str | None = None) -> str:
+    def buscar_productos(query: str) -> str:
         """
         Busca productos usando búsqueda semántica (pgvector).
         Usa esta herramienta cuando el usuario pregunte por productos, características, o inventario.
         Parámetros:
         - query: descripción o pregunta sobre el producto
-        - empresa_nit: NIT de la empresa para filtrar (opcional)
         """
         results = semantic_search_productos(db, query, empresa_nit, top_k=5)
         if not results:
@@ -86,8 +85,19 @@ def build_inventory_agent(db: Session) -> AgentExecutor:
 
     llm = _get_llm()
 
+    system_prompt = _SYSTEM_PROMPT
+    if empresa_nit:
+        nombre_display = empresa_nombre or empresa_nit
+        system_prompt += (
+            f"\n\nCONTEXTO ACTUAL: El usuario tiene seleccionada la empresa '{nombre_display}'. "
+            f"Todas las búsquedas con buscar_productos ya están filtradas automáticamente por esta empresa. "
+            f"Si el usuario pregunta qué empresa tiene seleccionada, responde con '{nombre_display}' directamente sin usar la herramienta."
+        )
+    else:
+        system_prompt += "\n\nCONTEXTO ACTUAL: No hay empresa seleccionada. Las búsquedas abarcan todas las empresas."
+
     prompt = ChatPromptTemplate.from_messages([
-        ("system", _SYSTEM_PROMPT),
+        ("system", system_prompt),
         MessagesPlaceholder(variable_name="chat_history", optional=True),
         ("human", "{input}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
@@ -105,14 +115,11 @@ def build_inventory_agent(db: Session) -> AgentExecutor:
     )
 
 
-async def run_agent_query(db: Session, query: str, empresa_nit: str | None = None) -> str:
+async def run_agent_query(db: Session, query: str, empresa_nit: str | None = None, empresa_nombre: str | None = None) -> str:
     """Run a single query through the inventory agent."""
     try:
-        agent_executor = build_inventory_agent(db)
-        full_query = query
-        if empresa_nit:
-            full_query = f"{query} (filtrar por empresa NIT: {empresa_nit})"
-        result = agent_executor.invoke({"input": full_query})
+        agent_executor = build_inventory_agent(db, empresa_nit, empresa_nombre)
+        result = agent_executor.invoke({"input": query})
         return result.get("output", "No se pudo generar una respuesta.")
     except RuntimeError as exc:
         logger.error("LLM not configured: %s", exc)

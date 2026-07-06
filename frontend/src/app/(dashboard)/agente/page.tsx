@@ -34,7 +34,8 @@ export default function AgentePage() {
     setLoading(true);
 
     try {
-      const { data } = await aiAgentApi.query(userMessage, selectedEmpresa || undefined);
+      const empresaNombre = empresas?.find((e: { nit: string; nombre: string }) => e.nit === selectedEmpresa)?.nombre;
+      const { data } = await aiAgentApi.query(userMessage, selectedEmpresa || undefined, empresaNombre);
       setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
     } catch {
       setMessages((prev) => [

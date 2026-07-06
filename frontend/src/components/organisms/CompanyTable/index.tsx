@@ -48,10 +48,10 @@ export function CompanyTable({ empresas, isAdmin, onEdit, onDelete }: CompanyTab
               {isAdmin && (
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onEdit?.(empresa)}>
+                    <Button variant="ghost" size="sm" onClick={() => onEdit?.(empresa)} aria-label={`Editar ${empresa.nombre}`}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="danger" size="sm" onClick={() => onDelete?.(empresa.nit)}>
+                    <Button variant="danger" size="sm" onClick={() => onDelete?.(empresa.nit)} aria-label={`Eliminar ${empresa.nombre}`}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

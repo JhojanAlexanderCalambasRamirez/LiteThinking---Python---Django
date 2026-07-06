@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, X } from "lucide-react";
 
@@ -18,9 +18,11 @@ export default function EmpresasPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [admin, setAdmin] = useState(false);
   const queryClient = useQueryClient();
-  const admin = isAdmin();
   const toast = useToast();
+
+  useEffect(() => { setAdmin(isAdmin()); }, []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["empresas"],
@@ -93,7 +95,7 @@ export default function EmpresasPage() {
             <h2 className="font-semibold text-gray-900">
               {editingEmpresa ? "Editar empresa" : "Registrar empresa"}
             </h2>
-            <button onClick={() => { setShowForm(false); setEditingEmpresa(null); setFormError(null); }}>
+            <button onClick={() => { setShowForm(false); setEditingEmpresa(null); setFormError(null); }} aria-label="Cerrar formulario">
               <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
             </button>
           </div>
