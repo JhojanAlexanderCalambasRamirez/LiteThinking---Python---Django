@@ -52,6 +52,7 @@ export interface Producto {
   nombre: string;
   caracteristicas: string | null;
   empresa_nit: string;
+  empresa_nombre?: string;
   activo: boolean;
   precios: ProductoPrecio[];
   created_at: string;

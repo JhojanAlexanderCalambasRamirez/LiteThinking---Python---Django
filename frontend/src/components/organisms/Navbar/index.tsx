@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Building2, Package, ClipboardList, Bot } from "lucide-react";
 import { clsx } from "clsx";
@@ -13,13 +14,17 @@ const navItems = [
   { href: "/empresas", label: "Empresas", icon: Building2 },
   { href: "/productos", label: "Productos", icon: Package, adminOnly: true },
   { href: "/inventario", label: "Inventario", icon: ClipboardList, adminOnly: true },
-  { href: "/agente", label: "Agente IA", icon: Bot },
+  { href: "/agente", label: "Agente IA", icon: Bot, adminOnly: true },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const user = getCurrentUser();
+  const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null);
+
+  useEffect(() => {
+    setUser(getCurrentUser());
+  }, []);
 
   const handleLogout = () => {
     clearTokens();

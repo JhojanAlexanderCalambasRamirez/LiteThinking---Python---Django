@@ -51,7 +51,7 @@ export default function AgentePage() {
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-800">
           <strong>Agente de Inventario</strong> - Haz preguntas en lenguaje natural sobre productos y empresas.
-          Usa pgvector para búsqueda semántica y Claude (Anthropic) para razonamiento.
+          Usa pgvector para búsqueda semántica y Groq (LLaMA 3.3) para razonamiento.
         </div>
 
         <div className="flex gap-3">

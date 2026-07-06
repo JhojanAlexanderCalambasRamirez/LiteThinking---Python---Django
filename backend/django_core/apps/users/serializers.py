@@ -35,6 +35,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token["nombre"] = user.nombre_completo() if hasattr(user, "nombre_completo") else user.email
         return token
 
+    def validate(self, attrs: dict) -> dict:
+        data = super().validate(attrs)
+        data["rol"] = self.user.rol  # type: ignore[attr-defined]
+        data["email"] = self.user.email  # type: ignore[attr-defined]
+        return data
+
     def nombre_completo(self) -> str:
         parts = filter(None, [self.user.nombre, self.user.apellido])  # type: ignore[attr-defined]
         return " ".join(parts) or self.user.email  # type: ignore[attr-defined]

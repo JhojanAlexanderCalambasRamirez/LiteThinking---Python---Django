@@ -11,13 +11,16 @@ import { Button } from "@/components/atoms/Button";
 import { Spinner } from "@/components/atoms/Spinner";
 import { empresasApi } from "@/lib/api";
 import { isAdmin } from "@/lib/auth";
+import { useToast } from "@/lib/toast";
 import { Empresa } from "@/types";
 
 export default function EmpresasPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const admin = isAdmin();
+  const toast = useToast();
 
   const { data, isLoading } = useQuery({
     queryKey: ["empresas"],
@@ -29,6 +32,15 @@ export default function EmpresasPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["empresas"] });
       setShowForm(false);
+      setFormError(null);
+      toast.success("Empresa registrada exitosamente.");
+    },
+    onError: (err: unknown) => {
+      const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
+      const msg = data
+        ? Object.values(data).flat().join(" ")
+        : "Error al crear la empresa.";
+      setFormError(msg as string);
     },
   });
 
@@ -38,15 +50,28 @@ export default function EmpresasPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["empresas"] });
       setEditingEmpresa(null);
+      setFormError(null);
+      toast.success("Empresa actualizada exitosamente.");
+    },
+    onError: (err: unknown) => {
+      const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
+      const msg = data
+        ? Object.values(data).flat().join(" ")
+        : "Error al actualizar la empresa.";
+      setFormError(msg as string);
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (nit: string) => empresasApi.delete(nit),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["empresas"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["empresas"] });
+      toast.info("Empresa desactivada.");
+    },
+    onError: () => toast.error("No se pudo desactivar la empresa."),
   });
 
-  const handleEdit = (empresa: Empresa) => setEditingEmpresa(empresa);
+  const handleEdit = (empresa: Empresa) => { setEditingEmpresa(empresa); setFormError(null); };
   const handleDelete = (nit: string) => {
     if (confirm("¿Desactivar esta empresa?")) deleteMutation.mutate(nit);
   };
@@ -68,13 +93,15 @@ export default function EmpresasPage() {
             <h2 className="font-semibold text-gray-900">
               {editingEmpresa ? "Editar empresa" : "Registrar empresa"}
             </h2>
-            <button onClick={() => { setShowForm(false); setEditingEmpresa(null); }}>
+            <button onClick={() => { setShowForm(false); setEditingEmpresa(null); setFormError(null); }}>
               <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
             </button>
           </div>
           <CompanyForm
+            key={editingEmpresa?.nit ?? "new"}
             defaultValues={editingEmpresa ?? undefined}
             isEditing={!!editingEmpresa}
+            apiError={formError}
             onSubmit={async (values) => {
               if (editingEmpresa) {
                 await updateMutation.mutateAsync({ nit: editingEmpresa.nit, data: values });

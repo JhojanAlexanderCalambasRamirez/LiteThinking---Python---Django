@@ -53,8 +53,10 @@ export const empresasApi = {
 
 // --- Productos ---
 export const productosApi = {
-  list: (empresaNit?: string) =>
-    api.get("/productos/", { params: empresaNit ? { empresa: empresaNit } : {} }),
+  list: (empresaNit?: string, page?: number) =>
+    api.get("/productos/", {
+      params: { ...(empresaNit ? { empresa: empresaNit } : {}), ...(page && page > 1 ? { page } : {}) },
+    }),
   get: (id: string) => api.get(`/productos/${id}/`),
   create: (data: object) => api.post("/productos/", data),
   update: (id: string, data: object) => api.patch(`/productos/${id}/`, data),
@@ -76,6 +78,8 @@ export const inventarioApi = {
   update: (id: string, data: object) => api.patch(`/inventario/${id}/`, data),
   delete: (id: string) => api.delete(`/inventario/${id}/`),
   exportEmail: (data: object) => api.post("/inventario/export-email/", data),
+  exportPdf: (empresaNit: string) =>
+    api.post("/inventario/export-pdf/", { empresa_nit: empresaNit }, { responseType: "blob" }),
 };
 
 // --- Auth ---
@@ -83,6 +87,13 @@ export const authApi = {
   login: (email: string, password: string) =>
     api.post("/auth/login/", { email, password }),
   me: () => api.get("/users/me/"),
+};
+
+// --- Users ---
+export const usersApi = {
+  register: (data: { email: string; password: string; nombre: string; apellido?: string }) =>
+    api.post("/users/register/", data),
+  list: () => api.get("/users/"),
 };
 
 // --- AI Agent ---

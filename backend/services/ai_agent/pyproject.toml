@@ -16,6 +16,7 @@ python-decouple = "^3.8"
 anthropic = "^0.28"
 langchain = "^0.2"
 langchain-anthropic = "^0.1"
+langchain-groq = ">=0.1"
 langchain-community = "^0.2"
 sentence-transformers = ">=3.0"
 # Blockchain

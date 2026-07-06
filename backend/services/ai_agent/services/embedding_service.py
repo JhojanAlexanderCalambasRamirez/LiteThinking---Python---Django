@@ -45,9 +45,9 @@ def upsert_producto_embedding(
     db.execute(
         text("""
             INSERT INTO producto_embedding (producto_id, embedding, model_name)
-            VALUES (:producto_id, :embedding, :model_name)
+            VALUES (:producto_id, CAST(:embedding AS vector), :model_name)
             ON CONFLICT (producto_id, model_name)
-            DO UPDATE SET embedding = EXCLUDED.embedding, updated_at = NOW()
+            DO UPDATE SET embedding = CAST(EXCLUDED.embedding AS vector), updated_at = NOW()
         """),
         {
             "producto_id": str(producto_id),
@@ -81,12 +81,14 @@ def semantic_search_productos(
                 p.nombre,
                 p.caracteristicas,
                 p.empresa_nit,
-                1 - (pe.embedding <=> :query_embedding::vector) AS similarity
+                e.nombre AS empresa_nombre,
+                1 - (pe.embedding <=> CAST(:query_embedding AS vector)) AS similarity
             FROM producto_embedding pe
             JOIN producto p ON p.id = pe.producto_id
+            JOIN empresa e ON e.nit = p.empresa_nit
             WHERE p.activo = TRUE
             {empresa_filter}
-            ORDER BY pe.embedding <=> :query_embedding::vector
+            ORDER BY pe.embedding <=> CAST(:query_embedding AS vector)
             LIMIT :top_k
         """),
         {
@@ -103,6 +105,7 @@ def semantic_search_productos(
             "nombre": row.nombre,
             "caracteristicas": row.caracteristicas,
             "empresa_nit": row.empresa_nit,
+            "empresa_nombre": row.empresa_nombre,
             "similarity": float(row.similarity),
         }
         for row in rows

@@ -1,184 +1,76 @@
 # LiteThinking — Prueba Técnica 2026
 
-Aplicación full-stack empresarial desarrollada como prueba técnica para **LiteThinking**. Implementa gestión de empresas, productos e inventario con arquitectura limpia, microservicios y búsqueda semántica vectorial.
+Aplicación full-stack empresarial: gestión de empresas, productos e inventario con Clean Architecture, microservicios FastAPI, búsqueda semántica vectorial y agente de lenguaje natural.
 
 ---
 
-## Stack Tecnológico
+## Stack
 
 | Capa | Tecnología |
 |------|-----------|
-| Frontend | Next.js 14 (App Router), TypeScript, Tailwind CSS, TanStack Query |
+| Frontend | Next.js 14, TypeScript, Tailwind CSS, TanStack Query |
 | Backend principal | Django 5 + Django REST Framework |
-| Microservicio inventario | FastAPI + ReportLab + SMTP/SendGrid |
-| Microservicio agente | FastAPI + LangChain + Anthropic + pgvector |
+| Microservicio inventario | FastAPI — PDF (ReportLab) + Email (SMTP/SendGrid) |
+| Microservicio agente | FastAPI — LangChain + Groq + pgvector |
 | Base de datos | PostgreSQL 18 + pgvector |
-| Dominio | Python puro (Poetry) — sin dependencias de framework |
-| Autenticación | JWT (SimpleJWT) — Access 60min + Refresh 7 días |
-| Hashing | Argon2 (bcrypt fallback) |
-| ORM | Django ORM (core) + SQLAlchemy (microservicios) |
+| Dominio | Python puro, Poetry — sin dependencias de framework |
+| Autenticación | JWT (access 60min + refresh 7 días) |
+| Hashing | Argon2 |
 
 ---
 
-## Arquitectura
+## Requisitos
 
-El proyecto sigue **Clean Architecture** con separación estricta de capas:
+- Python 3.11 – 3.13
+- Node.js 18+
+- PostgreSQL 15+ con extensión `pgvector`
+- Poetry — instalar si no está:
 
-```
-┌─────────────────────────────────────────────┐
-│                  FRONTEND                    │
-│         Next.js 14 — Atomic Design           │
-│  atoms → molecules → organisms → templates  │
-└──────────────────┬──────────────────────────┘
-                   │ HTTP / JWT
-┌──────────────────▼──────────────────────────┐
-│            APLICACIÓN / API                  │
-│     Django 5 + DRF  (puerto 8000)           │
-│  users | companies | products | inventory   │
-└────────┬──────────────────┬─────────────────┘
-         │ httpx             │ httpx
-┌────────▼────────┐  ┌──────▼──────────────────┐
-│ inventory_svc   │  │      ai_agent_svc        │
-│  FastAPI :8001  │  │     FastAPI :8002        │
-│  PDF + Email    │  │  LangChain + pgvector    │
-└─────────────────┘  └──────────────────────────┘
-                   │
-┌──────────────────▼──────────────────────────┐
-│              DOMINIO (Python puro)           │
-│     litethinking-domain  (Poetry pkg)        │
-│  Entities | Value Objects | Repositories     │
-│  Empresa | Producto | Usuario | Inventario  │
-│  NIT | Money | EmailAddress | PasswordHash  │
-└─────────────────────────────────────────────┘
-                   │
-┌──────────────────▼──────────────────────────┐
-│           INFRAESTRUCTURA                    │
-│     PostgreSQL 18 + pgvector extension       │
-└─────────────────────────────────────────────┘
-```
-
-### Capa de Dominio (independiente)
-
-La capa de dominio es un **paquete Python instalable via Poetry** (`litethinking-domain`) sin dependencias de framework. Contiene:
-
-- **Entidades**: `Empresa`, `Producto`, `Usuario`, `Inventario` — dataclasses con lógica de negocio pura
-- **Value Objects**: `NIT`, `Money`, `EmailAddress`, `PasswordHash` — inmutables, con validación
-- **Repositorios**: Interfaces ABC (puertos) — implementadas por Django ORM e SQLAlchemy
-- **Excepciones**: Jerarquía tipada de errores de dominio
-
----
-
-## Estructura del Proyecto
-
-```
-LiteThinking-Python-React/
-│
-├── domain/                          # Paquete de dominio (Poetry)
-│   ├── pyproject.toml
-│   └── src/litethinking_domain/
-│       ├── entities/                # Empresa, Producto, Usuario, Inventario
-│       ├── value_objects/           # NIT, Money, EmailAddress, PasswordHash
-│       ├── repositories/            # Interfaces ABC (puertos)
-│       └── exceptions/              # Excepciones de dominio tipadas
-│
-├── backend/
-│   ├── django_core/                 # API principal Django + DRF
-│   │   ├── apps/
-│   │   │   ├── users/               # Modelo usuario custom, JWT, roles
-│   │   │   ├── companies/           # CRUD empresas, repositorio Django
-│   │   │   ├── products/            # CRUD productos, precios multi-moneda
-│   │   │   └── inventory/           # Inventario, delegación a microservicios
-│   │   └── config/
-│   │       ├── settings/            # base / development / production / testing
-│   │       └── urls.py
-│   │
-│   └── services/
-│       ├── inventory_service/       # FastAPI: generación PDF, envío email
-│       │   ├── routers/
-│       │   └── services/            # pdf_service.py, email_service.py
-│       │
-│       └── ai_agent/                # FastAPI: agente semántico + blockchain
-│           ├── routers/
-│           └── services/            # embedding_service.py, langchain_agent.py,
-│                                    # blockchain_service.py
-│
-├── frontend/                        # Next.js 14 — App Router + Atomic Design
-│   └── src/
-│       ├── app/
-│       │   ├── (auth)/login/        # Vista inicio de sesión
-│       │   └── (dashboard)/
-│       │       ├── empresas/        # CRUD empresas
-│       │       ├── productos/       # CRUD productos + precios multi-moneda
-│       │       ├── inventario/      # Tabla + exportar PDF + enviar email
-│       │       └── agente/          # Chat con agente semántico
-│       ├── components/
-│       │   ├── atoms/               # Button, Input, Label, Spinner, Badge
-│       │   ├── molecules/           # FormField, CurrencyDisplay
-│       │   ├── organisms/           # LoginForm, CompanyForm, CompanyTable, Navbar
-│       │   └── templates/           # AuthTemplate, DashboardTemplate
-│       ├── lib/                     # api.ts (axios + JWT), auth.ts
-│       └── types/                   # Tipos TypeScript globales
-│
-└── database/
-    ├── migrations/V1__initial_schema.sql   # Schema completo con constraints
-    └── seeds/V2__seed_data.sql             # Monedas ISO 4217
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 ---
 
-## Requisitos Previos
-
-- **Python** 3.11 – 3.13
-- **Node.js** 18+
-- **PostgreSQL** 15+ con extensión `pgvector`
-- **Poetry** (`curl -sSL https://install.python-poetry.org | python3 -`)
-
----
-
-## Instalación y Configuración
+## Configuración inicial (una sola vez)
 
 ### 1. Variables de entorno
 
 ```bash
 cp .env.example .env
-# Editar .env con tus valores
 ```
 
-Variables críticas:
+Editar `.env` con los valores reales. Mínimo requerido:
 
 ```env
+# Base de datos
 DB_NAME=litethinking_db
-DB_USER=tu_usuario_postgres
-DB_PASSWORD=tu_password
+DB_USER=tu_usuario_postgres      # en Mac con Homebrew: tu usuario del sistema
+DB_PASSWORD=                     # vacío si usas autenticación por OS (trust)
+DB_HOST=localhost
+DB_PORT=5432
 DATABASE_URL=postgresql://tu_usuario@localhost:5432/litethinking_db
 
-DJANGO_SECRET_KEY=genera-una-clave-secreta-larga
+# Django
+DJANGO_SECRET_KEY=cambia-esto-por-una-clave-larga-y-aleatoria
 
-ANTHROPIC_API_KEY=sk-ant-tu-clave-aqui   # Para el agente semántico
-
-EMAIL_BACKEND=smtp
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=tu@gmail.com
-SMTP_PASSWORD=tu_app_password
+# Agente IA — obtener gratis en console.groq.com (sin tarjeta)
+GROQ_API_KEY=gsk_tu_clave_aqui
 ```
 
 ### 2. Base de datos
 
 ```bash
-# Crear base de datos
 createdb litethinking_db
-
-# Habilitar pgvector
 psql -d litethinking_db -c "CREATE EXTENSION IF NOT EXISTS vector;"
 ```
 
-### 3. Dominio (capa independiente)
+### 3. Dominio (paquete Python independiente)
 
 ```bash
 cd domain
 poetry install
-poetry run pytest        # Ejecutar tests unitarios del dominio
 cd ..
 ```
 
@@ -189,8 +81,8 @@ cd backend/django_core
 poetry install
 poetry run python manage.py migrate
 poetry run python manage.py createsuperuser
-# Email: admin@litethinking.com  |  Password: Admin1234!
-poetry run python manage.py runserver 0.0.0.0:8000
+# Ingresar: email=admin@litethinking.com / password=Admin1234!
+cd ../..
 ```
 
 ### 5. Microservicio Inventario
@@ -198,16 +90,16 @@ poetry run python manage.py runserver 0.0.0.0:8000
 ```bash
 cd backend/services/inventory_service
 poetry install
-poetry run uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+cd ../../..
 ```
 
-### 6. Microservicio Agente
+### 6. Microservicio Agente IA
 
 ```bash
 cd backend/services/ai_agent
 poetry install
 # El modelo de embeddings (~200MB) se descarga automáticamente al primer uso
-poetry run uvicorn main:app --host 0.0.0.0 --port 8002 --reload
+cd ../../..
 ```
 
 ### 7. Frontend
@@ -215,149 +107,225 @@ poetry run uvicorn main:app --host 0.0.0.0 --port 8002 --reload
 ```bash
 cd frontend
 npm install
+cd ..
+```
+
+---
+
+## Ejecutar el proyecto
+
+Abrir **4 terminales** (o usar tmux/iterm). Cada terminal desde la raíz del proyecto:
+
+### Terminal 1 — Django API (puerto 8000)
+
+```bash
+cd backend/django_core
+poetry run python manage.py runserver 0.0.0.0:8000
+```
+
+### Terminal 2 — Inventory Service (puerto 8001)
+
+```bash
+cd backend/services/inventory_service
+poetry run uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+```
+
+### Terminal 3 — AI Agent Service (puerto 8002)
+
+```bash
+cd backend/services/ai_agent
+poetry run uvicorn main:app --host 0.0.0.0 --port 8002 --reload
+```
+
+### Terminal 4 — Frontend Next.js (puerto 3000)
+
+```bash
+cd frontend
 npm run dev
 ```
 
 ---
 
-## Servicios y Puertos
+## URLs
 
-| Servicio | URL | Descripción |
-|---------|-----|-------------|
-| Frontend | http://localhost:3000 | Next.js — interfaz de usuario |
-| Django API | http://localhost:8000 | REST API principal |
-| Django Admin | http://localhost:8000/admin/ | Panel de administración |
-| Inventory Service | http://localhost:8001/docs | FastAPI — PDF + email |
-| AI Agent Service | http://localhost:8002/docs | FastAPI — agente semántico |
+| Servicio | URL |
+|---------|-----|
+| **Aplicación** | http://localhost:3000 |
+| **Django API** | http://localhost:8000/api/v1/ |
+| **Django Admin** | http://localhost:8000/admin/ |
+| **Inventory Docs** | http://localhost:8001/docs |
+| **AI Agent Docs** | http://localhost:8002/docs |
 
 ---
 
-## API Endpoints Principales
+## Credenciales por defecto
 
-### Autenticación
 ```
-POST /api/v1/auth/login/       → Obtener access + refresh token
-POST /api/v1/auth/refresh/     → Renovar access token
+Email:    admin@litethinking.com
+Password: Admin1234!
+Rol:      Administrador (acceso completo)
+```
+
+---
+
+## Flujo de uso
+
+### 1. Login
+Ir a http://localhost:3000 → ingresar credenciales → redirige al dashboard.
+
+### 2. Empresas
+- **Admin**: crear, editar, eliminar empresas
+- **Externo**: solo visualizar
+- NIT editable en cualquier momento; el cambio se propaga automáticamente a todos los productos asociados (ON UPDATE CASCADE)
+
+### 3. Productos
+- Crear producto con código, nombre, características y precios en múltiples monedas (COP, USD, EUR, etc.)
+- Al guardar, el embedding semántico se genera automáticamente para el agente IA
+
+### 4. Inventario
+- Ver productos agrupados por empresa
+- **Exportar PDF**: genera un PDF con la tabla completa
+- **Enviar por email**: adjunta el PDF y lo envía al correo indicado (requiere SMTP configurado)
+
+### 5. Agente IA
+- Chat en lenguaje natural: "¿Qué laptops tienen más de 16GB RAM?"
+- El agente busca productos por similitud semántica usando pgvector
+- Responde en español con los productos más relevantes
+
+---
+
+## API REST — Endpoints principales
+
+### Auth
+```
+POST /api/v1/auth/login/       → { email, password } → { access, refresh }
+POST /api/v1/auth/refresh/     → { refresh } → { access }
 ```
 
 ### Empresas
 ```
-GET    /api/v1/empresas/           → Listar empresas
-POST   /api/v1/empresas/           → Crear empresa (admin)
-GET    /api/v1/empresas/{nit}/     → Detalle empresa
-PUT    /api/v1/empresas/{nit}/     → Actualizar empresa (admin)
-DELETE /api/v1/empresas/{nit}/     → Soft delete empresa (admin)
+GET    /api/v1/empresas/           → listar
+POST   /api/v1/empresas/           → crear (admin)
+GET    /api/v1/empresas/{nit}/     → detalle
+PUT    /api/v1/empresas/{nit}/     → editar (admin)
+DELETE /api/v1/empresas/{nit}/     → eliminar/desactivar (admin)
 ```
 
 ### Productos
 ```
-GET    /api/v1/productos/          → Listar productos
-POST   /api/v1/productos/          → Crear producto con precios (admin)
-PUT    /api/v1/productos/{id}/     → Actualizar producto (admin)
-DELETE /api/v1/productos/{id}/     → Soft delete producto (admin)
+GET    /api/v1/productos/          → listar (filtrar: ?empresa=NIT)
+POST   /api/v1/productos/          → crear con precios (admin)
+GET    /api/v1/productos/{id}/     → detalle
+PUT    /api/v1/productos/{id}/     → editar (admin)
+DELETE /api/v1/productos/{id}/     → desactivar (admin)
+GET    /api/v1/monedas/            → listar monedas ISO 4217
 ```
 
 ### Inventario
 ```
-GET    /api/v1/inventario/         → Listar inventario (filtrable por empresa)
-POST   /api/v1/inventario/         → Agregar al inventario (admin)
-PATCH  /api/v1/inventario/{id}/    → Actualizar cantidad
-POST   /api/v1/inventario/export-pdf/      → Exportar PDF (vía microservicio)
-POST   /api/v1/inventario/export-email/    → Enviar PDF por email
+GET    /api/v1/inventario/                → listar (filtrar: ?empresa=NIT)
+POST   /api/v1/inventario/               → agregar stock (admin)
+PATCH  /api/v1/inventario/{id}/          → actualizar cantidad
+POST   /api/v1/inventario/export-pdf/    → generar PDF
+POST   /api/v1/inventario/export-email/  → enviar PDF por email
 ```
 
-### Monedas
+### Agente IA (puerto 8002)
 ```
-GET /api/v1/monedas/               → Listar monedas ISO 4217 disponibles
+POST /api/v1/agent/query/              → consulta en lenguaje natural
+POST /api/v1/agent/search/             → búsqueda semántica directa
+POST /api/v1/agent/embeddings/upsert/  → indexar producto manualmente
 ```
 
 ---
 
-## Roles de Usuario
+## Roles
 
-| Rol | Permisos |
-|-----|---------|
-| **Administrador** | CRUD completo: empresas, productos, inventario |
-| **Externo** | Solo lectura: visualizar empresas |
-
-Credenciales por defecto (desarrollo):
-- Email: `admin@litethinking.com`
-- Password: `Admin1234!`
+| Rol | Acceso |
+|-----|--------|
+| **admin** | CRUD completo: empresas, productos, inventario, exportación |
+| **externo** | Solo lectura: ver empresas |
 
 ---
 
-## Modelo de Base de Datos
+## Validaciones de NIT
 
-```
-empresa          → producto (RESTRICT delete, CASCADE update NIT)
-producto         → producto_precio (multi-moneda, CASCADE delete)
-producto_precio  → moneda (RESTRICT delete)
-producto         → inventario (RESTRICT delete, UNIQUE por producto)
-usuario          → inventario (created_by, SET NULL on delete)
-producto         → producto_embedding (CASCADE delete, vector 384 dims)
-empresa          → email_log (SET NULL on delete)
-```
+El NIT colombiano se valida en 4 capas:
 
-**Restricciones de integridad:**
-- NIT formato colombiano: `^\d{6,10}(-\d)?$`
-- Email formato válido con regex
-- Password hash validado (nunca texto plano)
-- Precios `NUMERIC(18,4)` — nunca `FLOAT`
-- Stock `>= 0` enforced a nivel DB
-- Monedas `UPPERCASE` ISO 4217
-- Soft delete en todas las entidades
+1. **Frontend (Zod)**: regex antes de enviar el formulario
+2. **Domain VO**: `NIT` value object inmutable con `InvalidNITError`
+3. **DRF Serializer**: `validate_nit()` con mensaje descriptivo; bloquea cambio de NIT si la empresa tiene productos asociados
+4. **DB CHECK CONSTRAINT**: `chk_empresa_nit_format` — última barrera
+
+Formato válido: `^\d{6,10}(-\d)?$`
+- `900123456` → válido
+- `900123456-7` → válido
+- `12345` → rechazado (muy corto)
+- `ABC12345` → rechazado (letras)
+
+El NIT puede editarse mientras la empresa no tenga productos asociados.
 
 ---
 
-## Funcionalidad de Exportación
-
-La vista de **Inventario** permite:
-1. **Descargar PDF**: Generado por `inventory_service` con ReportLab — tabla con productos, empresa, precios y cantidades
-2. **Enviar por email**: El PDF se adjunta y envía al destinatario indicado via SMTP o SendGrid
-
----
-
-## Agente Semántico
-
-La vista **Agente** expone un chat que permite consultas en lenguaje natural sobre el inventario:
-
-- **Embeddings**: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (384 dims, local, sin costo de API)
-- **Vector DB**: PostgreSQL con `pgvector`, índice `IVFFlat` para búsqueda coseno eficiente
-- **LLM**: Anthropic Claude via LangChain (`create_tool_calling_agent`)
-- **Herramienta**: `buscar_productos` — búsqueda semántica en tiempo real sobre embeddings almacenados
-- **Blockchain**: Registro SHA256 de operaciones críticas en `blockchain_log` (Polygon Mumbai opcional)
-
----
-
-## Docker (opcional)
+## Docker (alternativa)
 
 ```bash
+# Levantar todos los servicios con Docker
 docker-compose up --build
-```
 
-El `docker-compose.yml` levanta los 5 servicios: PostgreSQL, Django, inventory_service, ai_agent y frontend.
+# Solo la base de datos
+docker-compose up db
+```
 
 ---
 
-## Tests
+## Tests del dominio
 
 ```bash
-# Tests del dominio (entidades y value objects)
-cd domain && poetry run pytest -v
-
-# Tests Django
-cd backend/django_core && poetry run python manage.py test
+cd domain
+poetry run pytest -v
 ```
 
 ---
 
-## Despliegue con Docker
+## Estructura del proyecto
 
-Cada servicio tiene su propio `Dockerfile`. El `docker-compose.yml` coordina:
-- Healthchecks entre servicios
-- Variables de entorno desde `.env`
-- Red interna `litethinking_network`
-- Volumen persistente para PostgreSQL
+```
+LiteThinking-Python-React/
+├── domain/                          # Paquete Python independiente (Poetry)
+│   └── src/litethinking_domain/
+│       ├── entities/                # Empresa, Producto, Usuario, Inventario
+│       ├── value_objects/           # NIT, Money, EmailAddress, PasswordHash
+│       ├── repositories/            # Interfaces ABC (puertos)
+│       └── exceptions/              # Errores de dominio tipados
+│
+├── backend/
+│   ├── django_core/                 # API principal (puerto 8000)
+│   │   └── apps/
+│   │       ├── users/               # Auth JWT, roles, modelo custom
+│   │       ├── companies/           # CRUD empresas + constraints NIT
+│   │       ├── products/            # CRUD productos, precios multi-moneda
+│   │       └── inventory/           # Stock, exportación PDF/email
+│   │
+│   └── services/
+│       ├── inventory_service/       # FastAPI PDF + email (puerto 8001)
+│       └── ai_agent/                # FastAPI LangChain + pgvector (puerto 8002)
+│
+├── frontend/                        # Next.js 14 — Atomic Design
+│   └── src/
+│       ├── app/                     # App Router: login, empresas, productos,
+│       │                            #             inventario, agente
+│       ├── components/
+│       │   ├── atoms/               # Button, Input, Label, Spinner, Badge
+│       │   ├── molecules/           # FormField, CurrencyDisplay
+│       │   ├── organisms/           # LoginForm, CompanyForm, CompanyTable, Navbar
+│       │   └── templates/           # AuthTemplate, DashboardTemplate
+│       └── lib/                     # api.ts (axios + JWT interceptor), auth.ts
+│
+└── database/
+    ├── migrations/V1__initial_schema.sql
+    └── seeds/V2__seed_data.sql
+```
 
 ---
 

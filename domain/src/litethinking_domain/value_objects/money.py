@@ -56,4 +56,7 @@ class Money:
 
     @classmethod
     def of(cls, amount: int | float | str | Decimal, currency: str) -> Money:
-        return cls(amount=Decimal(str(amount)), currency=currency)
+        try:
+            return cls(amount=Decimal(str(amount)), currency=currency)
+        except InvalidOperation as exc:
+            raise InvalidMoneyError(f"Invalid amount: '{amount}'") from exc

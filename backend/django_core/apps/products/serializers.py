@@ -27,26 +27,33 @@ class ProductoPrecioSerializer(serializers.ModelSerializer):
         return value
 
 
+def _auto_codigo(nombre: str, empresa_id: str) -> str:
+    prefix = "".join(c for c in nombre.upper() if c.isalnum())[:3] or "PRD"
+    count = ProductoModel.objects.filter(empresa_id=empresa_id).count() + 1
+    candidate = f"{prefix}-{count:03d}"
+    while ProductoModel.objects.filter(codigo=candidate, empresa_id=empresa_id).exists():
+        count += 1
+        candidate = f"{prefix}-{count:03d}"
+    return candidate
+
+
 class ProductoSerializer(serializers.ModelSerializer):
     precios = ProductoPrecioSerializer(many=True, read_only=True)
     empresa_nit = serializers.CharField(source="empresa_id")
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
 
     class Meta:
         model = ProductoModel
         fields = [
             "id", "codigo", "nombre", "caracteristicas",
-            "empresa_nit", "activo", "precios", "created_at", "updated_at",
+            "empresa_nit", "empresa_nombre", "activo", "precios", "created_at", "updated_at",
         ]
-        read_only_fields = ["id", "activo", "created_at", "updated_at", "precios"]
-
-    def validate_codigo(self, value: str) -> str:
-        if not value.strip():
-            raise serializers.ValidationError("El código no puede estar vacío.")
-        return value.strip().upper()
+        read_only_fields = ["id", "created_at", "updated_at", "precios", "empresa_nombre"]
 
 
 class ProductoCreateSerializer(serializers.ModelSerializer):
     empresa_nit = serializers.CharField(source="empresa_id", write_only=True)
+    codigo = serializers.CharField(required=False, allow_blank=True, default="")
     precios = ProductoPrecioSerializer(many=True, required=False)
 
     class Meta:
@@ -55,6 +62,13 @@ class ProductoCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data: dict) -> ProductoModel:
         precios_data = validated_data.pop("precios", [])
+        codigo = validated_data.get("codigo", "").strip().upper()
+        if not codigo:
+            validated_data["codigo"] = _auto_codigo(
+                validated_data["nombre"], validated_data["empresa_id"]
+            )
+        else:
+            validated_data["codigo"] = codigo
         producto = ProductoModel.objects.create(**validated_data)
         for precio_data in precios_data:
             ProductoPrecioModel.objects.create(

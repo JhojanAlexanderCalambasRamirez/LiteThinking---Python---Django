@@ -26,10 +26,9 @@ class InventarioItem(BaseModel):
     precios: list[PrecioItem] = []
 
 
-class ExportEmailRequest(BaseModel):
+class ExportInventoryRequest(BaseModel):
     empresa_nit: str
     empresa_nombre: str | None = None
-    recipient_email: EmailStr
     items: list[InventarioItem]
 
     @field_validator("items")
@@ -40,12 +39,13 @@ class ExportEmailRequest(BaseModel):
         return v
 
 
+class ExportEmailRequest(ExportInventoryRequest):
+    recipient_email: EmailStr
+
+
 @router.post("/inventory/export-email/")
 async def export_and_email(payload: ExportEmailRequest) -> dict[str, Any]:
-    """
-    Generate inventory PDF and send it to the given email.
-    Called internally by the Django backend.
-    """
+    """Generate inventory PDF and send it to the given email."""
     empresa_nombre = payload.empresa_nombre or payload.empresa_nit
     items_dicts = [item.model_dump() for item in payload.items]
 
@@ -61,6 +61,7 @@ async def export_and_email(payload: ExportEmailRequest) -> dict[str, Any]:
         empresa_nombre=empresa_nombre,
         pdf_bytes=pdf_bytes,
         filename=filename,
+        items_count=len(payload.items),
     )
 
     if not sent:
@@ -74,7 +75,7 @@ async def export_and_email(payload: ExportEmailRequest) -> dict[str, Any]:
 
 
 @router.post("/inventory/export-pdf/")
-async def export_pdf(payload: ExportEmailRequest) -> StreamingResponse:
+async def export_pdf(payload: ExportInventoryRequest) -> StreamingResponse:
     """Return the PDF directly as a download (no email)."""
     import io
 

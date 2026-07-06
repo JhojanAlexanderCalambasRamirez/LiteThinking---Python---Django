@@ -15,9 +15,25 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 
 class RegisterUserView(generics.CreateAPIView):
+    """
+    Public: registers as 'externo' (rol forced, cannot self-assign admin).
+    Admin: can register any role by passing rol=admin.
+    """
     queryset = UserModel.objects.all()
-    serializer_class = RegisterUserSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [AllowAny]
+
+    def get_serializer_class(self):  # type: ignore[override]
+        return RegisterUserSerializer
+
+    def perform_create(self, serializer):  # type: ignore[override]
+        is_admin_request = (
+            self.request.user.is_authenticated
+            and getattr(self.request.user, "rol", None) == "admin"
+        )
+        if not is_admin_request:
+            serializer.save(rol="externo")
+        else:
+            serializer.save()
 
 
 class CurrentUserView(APIView):

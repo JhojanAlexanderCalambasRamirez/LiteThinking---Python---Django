@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 
+import Link from "next/link";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { FormField } from "@/components/molecules/FormField";
@@ -76,6 +77,13 @@ export function LoginForm() {
       <Button type="submit" className="w-full" loading={isSubmitting}>
         Iniciar Sesión
       </Button>
+
+      <p className="text-center text-sm text-gray-500">
+        ¿No tienes cuenta?{" "}
+        <Link href="/register" className="text-brand-600 hover:underline font-medium">
+          Crear cuenta como externo
+        </Link>
+      </p>
     </form>
   );
 }
