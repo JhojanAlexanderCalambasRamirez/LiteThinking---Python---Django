@@ -1,6 +1,6 @@
 # LiteThinking — Prueba Técnica 2026
 
-Aplicación full-stack empresarial: gestión de empresas, productos e inventario con Clean Architecture, microservicios FastAPI, búsqueda semántica vectorial, agente de lenguaje natural y auditoría blockchain.
+Aplicación full-stack empresarial: gestión de empresas, productos e inventario con Clean Architecture, microservicios FastAPI, búsqueda semántica vectorial y auditoría blockchain.
 
 ---
 
@@ -317,11 +317,11 @@ URL pública: https://lite-thinking-python-django.vercel.app/login
 
 | Métrica | Resultado |
 |---------|-----------|
-| Performance | 🟢 **100%** |
-| Structure | 🟢 **100%** |
-| LCP | 🟢 592ms |
-| TBT | 🟢 0ms |
-| CLS | 🟢 0 |
+| Performance | **100%** |
+| Structure | **100%** |
+| LCP | 592ms |
+| TBT | 0ms |
+| CLS | 0 |
 
 ---
 
@@ -342,12 +342,12 @@ Configuración en `sonar-project.properties` (raíz del proyecto).
 
 | Métrica | Resultado |
 |---------|-----------|
-| Quality Gate | ✅ **Passed** |
-| Bugs | 🟢 0 |
-| Vulnerabilities | 🟢 0 |
-| Security Hotspots | 🟢 0 |
-| Code Smells | 🟡 64 |
-| Duplications | 🟢 0.0% |
+| Quality Gate | **Passed** |
+| Bugs | 0 |
+| Vulnerabilities | 0 |
+| Security Hotspots | 0 |
+| Code Smells | 64 |
+| Duplications | 0.0% |
 | Lines of Code | 5,033 |
 
 ---
