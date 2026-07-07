@@ -12,7 +12,7 @@ export function AuthTemplate({ title, subtitle, children }: AuthTemplateProps) {
       <main className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white">LiteThinking</h1>
-          {subtitle && <p className="mt-2 text-brand-200">{subtitle}</p>}
+          {subtitle && <p className="mt-2 text-white/80">{subtitle}</p>}
         </div>
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">{title}</h2>
