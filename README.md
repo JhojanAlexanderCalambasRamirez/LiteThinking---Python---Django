@@ -311,6 +311,20 @@ cd backend/django_core && poetry run pytest -v
 
 ---
 
+## Rendimiento — GTmetrix
+
+URL pública: https://lite-thinking-python-django.vercel.app/login
+
+| Métrica | Resultado |
+|---------|-----------|
+| Performance | 🟢 **100%** |
+| Structure | 🟢 **100%** |
+| LCP | 🟢 592ms |
+| TBT | 🟢 0ms |
+| CLS | 🟢 0 |
+
+---
+
 ## SonarQube
 
 ```bash

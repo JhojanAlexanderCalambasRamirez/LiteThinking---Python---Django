@@ -468,6 +468,23 @@ Para email: mismo flujo + SMTP → PDF va al correo
 
 ---
 
+## GTmetrix — Resultados
+
+URL pública: https://lite-thinking-python-django.vercel.app/login
+
+| Métrica | Resultado |
+|---------|-----------|
+| Performance | 🟢 **100%** |
+| Structure | 🟢 **100%** |
+| LCP | 🟢 592ms |
+| TBT | 🟢 0ms |
+| CLS | 🟢 0 |
+
+**Qué decir ante los jurados:**
+> "GTmetrix 100% en Performance y Structure. LCP de 592ms (excelente — umbral bueno es < 2.5s). TBT 0ms y CLS 0 — sin bloqueo de renderizado ni saltos de layout. Estos resultados se logran por Next.js App Router con SSR, Tailwind CSS sin JS en runtime, y las correcciones de hidratación implementadas."
+
+---
+
 ## Lighthouse / Rendimiento
 
 Fixes para 100/100/100/100 en producción:
