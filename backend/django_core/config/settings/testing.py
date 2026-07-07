@@ -5,7 +5,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "litethinking_test_db",
         "USER": "postgres",
-        "PASSWORD": "postgres",
+        "PASSWORD": "postgres",  # NOSONAR — test-only credential, not production
         "HOST": "localhost",
         "PORT": "5432",
     }
