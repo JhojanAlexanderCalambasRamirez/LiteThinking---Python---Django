@@ -96,6 +96,21 @@ export const usersApi = {
   list: () => api.get("/users/"),
 };
 
+// --- Pedidos ---
+export const pedidoApi = {
+  confirmar: (items: { inventario_id: string; cantidad: number }[]) =>
+    api.post("/inventario/pedido/", { items }),
+};
+
+// --- Blockchain ---
+export const blockchainApi = {
+  getLogs: (entity_type?: string, limit = 50) =>
+    axios.get(
+      `${process.env.NEXT_PUBLIC_AI_AGENT_URL}/api/v1/blockchain/log/`,
+      { params: { ...(entity_type ? { entity_type } : {}), limit } }
+    ),
+};
+
 // --- AI Agent ---
 export const aiAgentApi = {
   query: (query: string, empresa_nit?: string, empresa_nombre?: string) =>

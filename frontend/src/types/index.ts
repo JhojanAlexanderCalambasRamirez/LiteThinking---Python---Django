@@ -96,6 +96,19 @@ export interface AgentQueryResponse {
   response: string;
 }
 
+export interface BlockchainLog {
+  id: string;
+  entity_type: string;
+  entity_id: string;
+  accion: "CREATE" | "UPDATE" | "DELETE";
+  data_hash: string;
+  tx_hash: string | null;
+  block_number: number | null;
+  network: string | null;
+  created_at: string;
+  on_chain: boolean;
+}
+
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;

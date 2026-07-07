@@ -1,6 +1,6 @@
 # LiteThinking — Prueba Técnica 2026
 
-Aplicación full-stack empresarial: gestión de empresas, productos e inventario con Clean Architecture, microservicios FastAPI, búsqueda semántica vectorial y agente de lenguaje natural.
+Aplicación full-stack empresarial: gestión de empresas, productos e inventario con Clean Architecture, microservicios FastAPI, búsqueda semántica vectorial, agente de lenguaje natural y auditoría blockchain.
 
 ---
 
@@ -8,23 +8,23 @@ Aplicación full-stack empresarial: gestión de empresas, productos e inventario
 
 | Capa | Tecnología |
 |------|-----------|
-| Frontend | Next.js 14, TypeScript, Tailwind CSS, TanStack Query |
+| Frontend | Next.js 14, TypeScript, Tailwind CSS, TanStack Query, Atomic Design |
 | Backend principal | Django 5 + Django REST Framework |
-| Microservicio inventario | FastAPI — PDF (ReportLab) + Email (SMTP/SendGrid) |
-| Microservicio agente | FastAPI — LangChain + Groq + pgvector |
-| Base de datos | PostgreSQL 18 + pgvector |
+| Microservicio inventario | FastAPI — PDF (ReportLab) + Email (SMTP) |
+| Microservicio agente | FastAPI — LangChain + Groq/Anthropic + pgvector |
+| Base de datos | PostgreSQL + pgvector (embeddings vectoriales) |
 | Dominio | Python puro, Poetry — sin dependencias de framework |
-| Autenticación | JWT (access 60min + refresh 7 días) |
-| Hashing | Argon2 |
+| Autenticación | JWT (access 60min + refresh 7 días) + bcrypt |
+| Blockchain | SHA-256 audit trail + web3.py (Polygon Mumbai ready) |
 
 ---
 
-## Requisitos
+## Requisitos previos
 
-- Python 3.11 – 3.13
+- Python 3.11+
 - Node.js 18+
 - PostgreSQL 15+ con extensión `pgvector`
-- Poetry — instalar si no está:
+- Poetry:
 
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
@@ -33,7 +33,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ---
 
-## Configuración inicial (una sola vez)
+## Instalación
 
 ### 1. Variables de entorno
 
@@ -41,21 +41,19 @@ export PATH="$HOME/.local/bin:$PATH"
 cp .env.example .env
 ```
 
-Editar `.env` con los valores reales. Mínimo requerido:
+Mínimo requerido en `.env`:
 
 ```env
-# Base de datos
 DB_NAME=litethinking_db
-DB_USER=tu_usuario_postgres      # en Mac con Homebrew: tu usuario del sistema
-DB_PASSWORD=                     # vacío si usas autenticación por OS (trust)
+DB_USER=tu_usuario_postgres
+DB_PASSWORD=
 DB_HOST=localhost
 DB_PORT=5432
 DATABASE_URL=postgresql://tu_usuario@localhost:5432/litethinking_db
 
-# Django
-DJANGO_SECRET_KEY=cambia-esto-por-una-clave-larga-y-aleatoria
+DJANGO_SECRET_KEY=cambia-esto-por-una-clave-larga-aleatoria
 
-# Agente IA — obtener gratis en console.groq.com (sin tarjeta)
+# Agente — obtener gratis en console.groq.com
 GROQ_API_KEY=gsk_tu_clave_aqui
 ```
 
@@ -64,14 +62,14 @@ GROQ_API_KEY=gsk_tu_clave_aqui
 ```bash
 createdb litethinking_db
 psql -d litethinking_db -c "CREATE EXTENSION IF NOT EXISTS vector;"
+psql -U postgres -d litethinking_db -f database/migrations/V1__initial_schema.sql
+psql -U postgres -d litethinking_db -f database/seeds/V2__seed_data.sql
 ```
 
 ### 3. Dominio (paquete Python independiente)
 
 ```bash
-cd domain
-poetry install
-cd ..
+cd domain && poetry install && cd ..
 ```
 
 ### 4. Backend Django
@@ -80,68 +78,52 @@ cd ..
 cd backend/django_core
 poetry install
 poetry run python manage.py migrate
-poetry run python manage.py createsuperuser
-# Ingresar: email=admin@litethinking.com / password=Admin1234!
 cd ../..
 ```
 
 ### 5. Microservicio Inventario
 
 ```bash
-cd backend/services/inventory_service
-poetry install
-cd ../../..
+cd backend/services/inventory_service && poetry install && cd ../../..
 ```
 
-### 6. Microservicio Agente IA
+### 6. Microservicio Agente
 
 ```bash
-cd backend/services/ai_agent
-poetry install
-# El modelo de embeddings (~200MB) se descarga automáticamente al primer uso
-cd ../../..
+cd backend/services/ai_agent && poetry install && cd ../../..
+# El modelo de embeddings (~200MB) se descarga en el primer uso
 ```
 
 ### 7. Frontend
 
 ```bash
-cd frontend
-npm install
-cd ..
+cd frontend && npm install && cd ..
 ```
 
 ---
 
 ## Ejecutar el proyecto
 
-Abrir **4 terminales** (o usar tmux/iterm). Cada terminal desde la raíz del proyecto:
-
-### Terminal 1 — Django API (puerto 8000)
+Abrir **4 terminales** desde la raíz del proyecto:
 
 ```bash
-cd backend/django_core
-poetry run python manage.py runserver 0.0.0.0:8000
+# T1 — Django API (puerto 8000)
+cd backend/django_core && poetry run python manage.py runserver
+
+# T2 — Inventory Service (puerto 8001)
+cd backend/services/inventory_service && poetry run uvicorn main:app --port 8001 --reload
+
+# T3 — AI Agent Service (puerto 8002)
+cd backend/services/ai_agent && poetry run uvicorn main:app --port 8002 --reload
+
+# T4 — Frontend Next.js (puerto 3000)
+cd frontend && npm run dev
 ```
 
-### Terminal 2 — Inventory Service (puerto 8001)
+**Si los embeddings están vacíos (agente sin resultados):**
 
 ```bash
-cd backend/services/inventory_service
-poetry run uvicorn main:app --host 0.0.0.0 --port 8001 --reload
-```
-
-### Terminal 3 — AI Agent Service (puerto 8002)
-
-```bash
-cd backend/services/ai_agent
-poetry run uvicorn main:app --host 0.0.0.0 --port 8002 --reload
-```
-
-### Terminal 4 — Frontend Next.js (puerto 3000)
-
-```bash
-cd frontend
-npm run dev
+cd backend/django_core && poetry run python manage.py reindex_embeddings
 ```
 
 ---
@@ -154,137 +136,193 @@ npm run dev
 | **Django API** | http://localhost:8000/api/v1/ |
 | **Django Admin** | http://localhost:8000/admin/ |
 | **Inventory Docs** | http://localhost:8001/docs |
-| **AI Agent Docs** | http://localhost:8002/docs |
+| **Agent Docs** | <http://localhost:8002/docs> |
 
 ---
 
 ## Credenciales por defecto
 
 ```
-Email:    admin@litethinking.com
-Password: Admin1234!
-Rol:      Administrador (acceso completo)
+Admin:    admin@litethinking.com   / Admin1234!
+Externo:  externo@litethinking.com / Externo1234!
 ```
 
 ---
 
 ## Flujo de uso
 
-### 1. Login
-Ir a http://localhost:3000 → ingresar credenciales → redirige al dashboard.
+### 1. Login y roles
 
-### 2. Empresas
-- **Admin**: crear, editar, eliminar empresas
-- **Externo**: solo visualizar
-- NIT editable en cualquier momento; el cambio se propaga automáticamente a todos los productos asociados (ON UPDATE CASCADE)
+- **Admin**: acceso completo a todas las vistas
+- **Externo**: solo visualiza empresas como visitante
 
-### 3. Productos
-- Crear producto con código, nombre, características y precios en múltiples monedas (COP, USD, EUR, etc.)
-- Al guardar, el embedding semántico se genera automáticamente para el agente IA
+### 2. Empresas (req a)
 
-### 4. Inventario
-- Ver productos agrupados por empresa
-- **Exportar PDF**: genera un PDF con la tabla completa
-- **Enviar por email**: adjunta el PDF y lo envía al correo indicado (requiere SMTP configurado)
+CRUD completo: NIT (PK editable con CASCADE), nombre, dirección, teléfono. Cada operación genera un registro en blockchain_log.
 
-### 5. Agente IA
-- Chat en lenguaje natural: "¿Qué laptops tienen más de 16GB RAM?"
-- El agente busca productos por similitud semántica usando pgvector
-- Responde en español con los productos más relevantes
+### 3. Productos (req b)
+
+Crear con código, nombre, características y precios en múltiples monedas (COP, USD, EUR…). Al guardar, el sistema genera el embedding semántico automáticamente para el agente.
+
+### 4. Inventario (req d)
+
+- Ver stock por empresa con edición inline de cantidades
+- **Exportar PDF**: genera PDF con ReportLab via microservicio
+- **Enviar por email**: adjunta el PDF al correo indicado (requiere SMTP)
+
+### 5. Agente IA + Carrito (req g, k)
+
+- Selecciona empresa en el dropdown
+- Escribe en lenguaje natural: "¿Qué laptops tienen más de 16GB RAM?"
+- El agente busca por similitud semántica (pgvector cosine similarity)
+- Los productos aparecen como chips clicables debajo de la respuesta
+- Agrega al carrito, ajusta cantidades y confirma el pedido
+- El pedido decrementa stock con `select_for_update()` y escribe en blockchain_log
+
+### 6. Auditoría Blockchain (req g)
+
+Vista `/auditoria` (solo admin): tabla de todas las operaciones críticas con hash SHA-256, filtros por entidad (empresa / producto / inventario) y estado on-chain vs local.
 
 ---
 
 ## API REST — Endpoints principales
 
-### Auth
+### Auth (Django :8000)
+
 ```
-POST /api/v1/auth/login/       → { email, password } → { access, refresh }
-POST /api/v1/auth/refresh/     → { refresh } → { access }
+POST /api/v1/auth/login/       { email, password } → { access, refresh }
+POST /api/v1/auth/refresh/     { refresh } → { access }
 ```
 
 ### Empresas
+
 ```
-GET    /api/v1/empresas/           → listar
-POST   /api/v1/empresas/           → crear (admin)
-GET    /api/v1/empresas/{nit}/     → detalle
-PUT    /api/v1/empresas/{nit}/     → editar (admin)
-DELETE /api/v1/empresas/{nit}/     → eliminar/desactivar (admin)
+GET    /api/v1/empresas/
+POST   /api/v1/empresas/           (admin)
+GET    /api/v1/empresas/{nit}/
+PATCH  /api/v1/empresas/{nit}/     (admin)
+DELETE /api/v1/empresas/{nit}/     (admin — soft delete)
 ```
 
 ### Productos
+
 ```
-GET    /api/v1/productos/          → listar (filtrar: ?empresa=NIT)
-POST   /api/v1/productos/          → crear con precios (admin)
-GET    /api/v1/productos/{id}/     → detalle
-PUT    /api/v1/productos/{id}/     → editar (admin)
-DELETE /api/v1/productos/{id}/     → desactivar (admin)
-GET    /api/v1/monedas/            → listar monedas ISO 4217
+GET    /api/v1/productos/          ?empresa=NIT
+POST   /api/v1/productos/          (admin)
+PATCH  /api/v1/productos/{id}/     (admin)
+DELETE /api/v1/productos/{id}/     (admin — soft delete)
+POST   /api/v1/productos/{id}/precios/
+GET    /api/v1/monedas/
 ```
 
 ### Inventario
+
 ```
-GET    /api/v1/inventario/                → listar (filtrar: ?empresa=NIT)
-POST   /api/v1/inventario/               → agregar stock (admin)
-PATCH  /api/v1/inventario/{id}/          → actualizar cantidad
-POST   /api/v1/inventario/export-pdf/    → generar PDF
-POST   /api/v1/inventario/export-email/  → enviar PDF por email
+GET    /api/v1/inventario/              ?empresa=NIT
+POST   /api/v1/inventario/             (admin)
+PATCH  /api/v1/inventario/{id}/        (admin)
+POST   /api/v1/inventario/pedido/      { items: [{inventario_id, cantidad}] }
+POST   /api/v1/inventario/export-pdf/  { empresa_nit }
+POST   /api/v1/inventario/export-email/ { empresa_nit, recipient_email }
 ```
 
-### Agente IA (puerto 8002)
+### Agente (FastAPI :8002)
+
 ```
-POST /api/v1/agent/query/              → consulta en lenguaje natural
-POST /api/v1/agent/search/             → búsqueda semántica directa
-POST /api/v1/agent/embeddings/upsert/  → indexar producto manualmente
+POST /api/v1/agent/query/              { query, empresa_nit?, empresa_nombre? }
+POST /api/v1/agent/search/             { query, empresa_nit?, top_k? }
+POST /api/v1/agent/embeddings/upsert/  { producto_id, nombre, caracteristicas }
+GET  /api/v1/blockchain/log/           ?entity_type=inventario&limit=50
 ```
+
+---
+
+## Blockchain — Auditoría de integridad
+
+Cada operación crítica (crear/editar/eliminar empresa, producto o inventario) genera:
+
+```
+payload = { datos del evento }
+data_hash = SHA-256(JSON.dumps(payload, sort_keys=True))
+→ INSERT INTO blockchain_log (entity_type, entity_id, accion, data_hash)
+```
+
+Si alguien modifica un registro directamente en la BD, el hash guardado ya no coincide con el estado actual — la manipulación es detectable.
+
+La infraestructura para anclar hashes en Polygon Mumbai (web3.py) está implementada. Se activa con `BLOCKCHAIN_ENABLED=True` y `BLOCKCHAIN_PRIVATE_KEY` en `.env`.
+
+---
+
+## Arquitectura — Clean Architecture
+
+```
+domain/                 ← Entidades + Value Objects + Repositorios ABC
+                          Sin imports de Django, FastAPI, SQLAlchemy
+backend/django_core/    ← Capa aplicación + infraestructura
+  utils/blockchain.py   ← Helper SHA-256 compartido por todas las apps
+  apps/companies/       ← Implementa repositorios del dominio
+  apps/products/
+  apps/inventory/
+  apps/users/
+backend/services/       ← Microservicios independientes
+  inventory_service/    ← PDF + email (ReportLab + SMTP)
+  ai_agent/             ← pgvector + LangChain + blockchain log GET
+frontend/               ← Next.js 14, Atomic Design
+  atoms → molecules → organisms → templates → pages
+```
+
+**El dominio no conoce a Django.** Django consume el dominio como paquete Poetry local (`litethinking-domain = { path = "../../domain", develop = true }`).
 
 ---
 
 ## Roles
 
-| Rol | Acceso |
-|-----|--------|
-| **admin** | CRUD completo: empresas, productos, inventario, exportación |
-| **externo** | Solo lectura: ver empresas |
+| Rol        | Acceso                                                                    |
+|------------|---------------------------------------------------------------------------|
+| **admin**  | CRUD empresas, productos, inventario, exportación, agente, auditoría      |
+| **externo**| Solo lectura: ver empresas                                                |
 
 ---
 
-## Validaciones de NIT
+## Validación de NIT
 
-El NIT colombiano se valida en 4 capas:
+4 capas de validación:
 
-1. **Frontend (Zod)**: regex antes de enviar el formulario
-2. **Domain VO**: `NIT` value object inmutable con `InvalidNITError`
-3. **DRF Serializer**: `validate_nit()` con mensaje descriptivo; bloquea cambio de NIT si la empresa tiene productos asociados
+1. **Frontend (Zod)**: regex antes de enviar
+2. **Domain VO**: `NIT` value object con `InvalidNITError`
+3. **DRF Serializer**: `validate_nit()` con mensaje descriptivo
 4. **DB CHECK CONSTRAINT**: `chk_empresa_nit_format` — última barrera
 
-Formato válido: `^\d{6,10}(-\d)?$`
-- `900123456` → válido
-- `900123456-7` → válido
-- `12345` → rechazado (muy corto)
-- `ABC12345` → rechazado (letras)
+Formato válido: `^\d{6,10}(-\d)?$` — ej: `900123456` o `900123456-7`
 
-El NIT puede editarse mientras la empresa no tenga productos asociados.
+NIT es editable. El cambio se propaga automáticamente a todos los productos asociados via `ON UPDATE CASCADE` en PostgreSQL.
 
 ---
 
-## Docker (alternativa)
+## Tests
 
 ```bash
-# Levantar todos los servicios con Docker
-docker-compose up --build
+# Dominio (entidades + value objects)
+cd domain && poetry run pytest -v
 
-# Solo la base de datos
-docker-compose up db
+# Django
+cd backend/django_core && poetry run pytest -v
 ```
 
 ---
 
-## Tests del dominio
+## SonarQube
 
 ```bash
-cd domain
-poetry run pytest -v
+docker run -d --name sonarqube -p 9000:9000 sonarqube:community
+# Abrir http://localhost:9000 → crear proyecto → obtener token
+
+sonar-scanner \
+  -Dsonar.host.url=http://localhost:9000 \
+  -Dsonar.token=TU_TOKEN
 ```
+
+Configuración en `sonar-project.properties` (raíz del proyecto).
 
 ---
 
@@ -292,39 +330,54 @@ poetry run pytest -v
 
 ```
 LiteThinking-Python-React/
-├── domain/                          # Paquete Python independiente (Poetry)
+├── domain/                          # Paquete Poetry — capa dominio pura
+│   ├── pyproject.toml
 │   └── src/litethinking_domain/
 │       ├── entities/                # Empresa, Producto, Usuario, Inventario
 │       ├── value_objects/           # NIT, Money, EmailAddress, PasswordHash
 │       ├── repositories/            # Interfaces ABC (puertos)
-│       └── exceptions/              # Errores de dominio tipados
+│       └── exceptions/
 │
 ├── backend/
-│   ├── django_core/                 # API principal (puerto 8000)
+│   ├── django_core/                 # API principal :8000
+│   │   ├── utils/
+│   │   │   └── blockchain.py        # SHA-256 audit helper compartido
 │   │   └── apps/
-│   │       ├── users/               # Auth JWT, roles, modelo custom
-│   │       ├── companies/           # CRUD empresas + constraints NIT
-│   │       ├── products/            # CRUD productos, precios multi-moneda
-│   │       └── inventory/           # Stock, exportación PDF/email
+│   │       ├── companies/           # CRUD empresas + blockchain log
+│   │       ├── products/            # CRUD productos + embeddings + blockchain log
+│   │       ├── inventory/           # Stock + pedidos + PDF/email + blockchain log
+│   │       └── users/               # Auth JWT + roles
 │   │
 │   └── services/
-│       ├── inventory_service/       # FastAPI PDF + email (puerto 8001)
-│       └── ai_agent/                # FastAPI LangChain + pgvector (puerto 8002)
+│       ├── inventory_service/       # FastAPI :8001 — PDF + email
+│       └── ai_agent/                # FastAPI :8002 — agente + pgvector + blockchain GET
+│           ├── routers/agent.py
+│           └── services/
+│               ├── embedding_service.py
+│               ├── langchain_agent.py
+│               └── blockchain_service.py
 │
-├── frontend/                        # Next.js 14 — Atomic Design
+├── frontend/
 │   └── src/
-│       ├── app/                     # App Router: login, empresas, productos,
-│       │                            #             inventario, agente
-│       ├── components/
-│       │   ├── atoms/               # Button, Input, Label, Spinner, Badge
-│       │   ├── molecules/           # FormField, CurrencyDisplay
-│       │   ├── organisms/           # LoginForm, CompanyForm, CompanyTable, Navbar
-│       │   └── templates/           # AuthTemplate, DashboardTemplate
-│       └── lib/                     # api.ts (axios + JWT interceptor), auth.ts
+│       ├── app/(dashboard)/
+│       │   ├── empresas/
+│       │   ├── productos/
+│       │   ├── inventario/
+│       │   ├── agente/              # Agente + carrito
+│       │   └── auditoria/           # Blockchain audit (solo admin)
+│       └── components/
+│           ├── atoms/               # Button, Input, Label, Badge, Spinner
+│           ├── molecules/           # FormField, CurrencyDisplay
+│           ├── organisms/           # Navbar, CompanyForm/Table, InventoryTable…
+│           └── templates/           # AuthTemplate, DashboardTemplate
 │
-└── database/
-    ├── migrations/V1__initial_schema.sql
-    └── seeds/V2__seed_data.sql
+├── database/
+│   ├── migrations/V1__initial_schema.sql
+│   └── seeds/V2__seed_data.sql
+│
+├── sonar-project.properties
+├── GUIA_SUSTENTACION.md
+└── README.md
 ```
 
 ---

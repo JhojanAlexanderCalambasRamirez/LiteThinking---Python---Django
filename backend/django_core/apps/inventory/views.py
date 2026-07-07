@@ -4,13 +4,16 @@ import logging
 
 import httpx
 from django.conf import settings
+from django.db import transaction
 from django.http import HttpResponse
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from apps.users.permissions import IsAdmin, IsAdminOrReadOnly
+from utils.blockchain import log_blockchain
 
 from .models import InventarioModel
 from .serializers import InventarioCreateSerializer, InventarioSerializer
@@ -65,7 +68,13 @@ class InventarioListCreateView(generics.ListCreateAPIView):
         return InventarioSerializer
 
     def perform_create(self, serializer: InventarioCreateSerializer) -> None:  # type: ignore[override]
-        serializer.save(created_by=self.request.user)
+        inv = serializer.save(created_by=self.request.user)
+        log_blockchain(
+            "inventario",
+            str(inv.id),
+            "CREATE",
+            {"producto": inv.producto.nombre, "cantidad": inv.cantidad},
+        )
 
 
 class InventarioDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -77,6 +86,56 @@ class InventarioDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ("PUT", "PATCH"):
             return InventarioCreateSerializer
         return InventarioSerializer
+
+    def perform_update(self, serializer: InventarioCreateSerializer) -> None:  # type: ignore[override]
+        inv = serializer.save()
+        log_blockchain(
+            "inventario",
+            str(inv.id),
+            "UPDATE",
+            {"producto": inv.producto.nombre, "cantidad": inv.cantidad},
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def confirmar_pedido(request: Request) -> Response:
+    """
+    Confirm an order: decrement inventory quantities atomically.
+    Body: { "items": [{"inventario_id": "uuid", "cantidad": int}] }
+    """
+    items = request.data.get("items", [])
+    if not items:
+        return Response({"error": "items is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        with transaction.atomic():
+            resultados = []
+            for item in items:
+                inv = InventarioModel.objects.select_for_update().get(id=item["inventario_id"])
+                cantidad_solicitada = int(item["cantidad"])
+                if cantidad_solicitada <= 0:
+                    raise ValueError(f"Cantidad inválida para {inv.producto.nombre}.")
+                if inv.cantidad < cantidad_solicitada:
+                    raise ValueError(
+                        f"Stock insuficiente para {inv.producto.nombre}. "
+                        f"Disponible: {inv.cantidad}, solicitado: {cantidad_solicitada}."
+                    )
+                inv.cantidad -= cantidad_solicitada
+                inv.save(update_fields=["cantidad", "updated_at"])
+                resultados.append({
+                    "inventario_id": str(inv.id),
+                    "producto": inv.producto.nombre,
+                    "cantidad_solicitada": cantidad_solicitada,
+                    "stock_restante": inv.cantidad,
+                })
+        for r in resultados:
+            log_blockchain("inventario", r["inventario_id"], "UPDATE", r)
+        return Response({"ok": True, "resultados": resultados}, status=status.HTTP_200_OK)
+    except InventarioModel.DoesNotExist:
+        return Response({"error": "Producto de inventario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+    except ValueError as exc:
+        return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["POST"])

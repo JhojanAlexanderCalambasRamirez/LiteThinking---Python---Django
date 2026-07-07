@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Building2, Package, ClipboardList, Bot } from "lucide-react";
+import { LogOut, Building2, Package, ClipboardList, Bot, ShieldCheck } from "lucide-react";
 import { clsx } from "clsx";
 
 import { Button } from "@/components/atoms/Button";
@@ -15,6 +15,7 @@ const navItems = [
   { href: "/productos", label: "Productos", icon: Package, adminOnly: true },
   { href: "/inventario", label: "Inventario", icon: ClipboardList, adminOnly: true },
   { href: "/agente", label: "Agente IA", icon: Bot, adminOnly: true },
+  { href: "/auditoria", label: "Auditoría", icon: ShieldCheck, adminOnly: true },
 ];
 
 export function Navbar() {

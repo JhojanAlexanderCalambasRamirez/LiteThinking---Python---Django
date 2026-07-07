@@ -9,6 +9,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from apps.users.permissions import IsAdmin, IsAdminOrReadOnly
+from utils.blockchain import log_blockchain
 
 from .models import MonedaModel, ProductoModel, ProductoPrecioModel
 from .serializers import (
@@ -69,6 +70,12 @@ class ProductoListCreateView(generics.ListCreateAPIView):
             defaults={"cantidad": cantidad_inicial, "created_by": self.request.user},
         )
         _index_product_embedding(producto)
+        log_blockchain(
+            "producto",
+            str(producto.id),
+            "CREATE",
+            {"codigo": producto.codigo, "nombre": producto.nombre, "empresa": producto.empresa_id},
+        )
 
 
 class ProductoDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -80,11 +87,23 @@ class ProductoDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer: ProductoSerializer) -> None:  # type: ignore[override]
         producto = serializer.save()
         _index_product_embedding(producto)
+        log_blockchain(
+            "producto",
+            str(producto.id),
+            "UPDATE",
+            {"codigo": producto.codigo, "nombre": producto.nombre, "empresa": producto.empresa_id},
+        )
 
     def destroy(self, request: Request, *args: object, **kwargs: object) -> Response:
         instance = self.get_object()
         instance.activo = False
         instance.save(update_fields=["activo", "updated_at"])
+        log_blockchain(
+            "producto",
+            str(instance.id),
+            "DELETE",
+            {"codigo": instance.codigo, "nombre": instance.nombre, "empresa": instance.empresa_id},
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

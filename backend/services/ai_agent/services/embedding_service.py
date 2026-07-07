@@ -82,10 +82,13 @@ def semantic_search_productos(
                 p.caracteristicas,
                 p.empresa_nit,
                 e.nombre AS empresa_nombre,
+                inv.id AS inventario_id,
+                inv.cantidad AS stock,
                 1 - (pe.embedding <=> CAST(:query_embedding AS vector)) AS similarity
             FROM producto_embedding pe
             JOIN producto p ON p.id = pe.producto_id
             JOIN empresa e ON e.nit = p.empresa_nit
+            LEFT JOIN inventario inv ON inv.producto_id = p.id
             WHERE p.activo = TRUE
             {empresa_filter}
             ORDER BY pe.embedding <=> CAST(:query_embedding AS vector)
@@ -101,11 +104,13 @@ def semantic_search_productos(
     return [
         {
             "id": str(row.id),
+            "inventario_id": str(row.inventario_id) if row.inventario_id else None,
             "codigo": row.codigo,
             "nombre": row.nombre,
             "caracteristicas": row.caracteristicas,
             "empresa_nit": row.empresa_nit,
             "empresa_nombre": row.empresa_nombre,
+            "stock": int(row.stock) if row.stock is not None else 0,
             "similarity": float(row.similarity),
         }
         for row in rows
