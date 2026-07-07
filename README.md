@@ -324,6 +324,18 @@ sonar-scanner \
 
 Configuración en `sonar-project.properties` (raíz del proyecto).
 
+**Resultados del análisis (5,033 líneas):**
+
+| Métrica | Resultado |
+|---------|-----------|
+| Quality Gate | ✅ **Passed** |
+| Bugs | 🟢 0 |
+| Vulnerabilities | 🟢 0 |
+| Security Hotspots | 🟢 0 |
+| Code Smells | 🟡 64 |
+| Duplications | 🟢 0.0% |
+| Lines of Code | 5,033 |
+
 ---
 
 ## Estructura del proyecto

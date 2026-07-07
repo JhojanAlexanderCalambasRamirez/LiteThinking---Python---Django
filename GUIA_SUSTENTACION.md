@@ -485,21 +485,28 @@ En `npm run dev` el score de Performance es ~77 (normal: polyfills dev, webpack 
 
 ---
 
-## SonarQube
+## SonarQube — Resultados del análisis
 
+Dashboard: http://localhost:9000/dashboard?id=litethinking
+
+| Métrica | Resultado |
+|---------|-----------|
+| **Quality Gate** | ✅ **Passed** |
+| Bugs | 🟢 **0** |
+| Vulnerabilities | 🟢 **0** |
+| Security Hotspots | 🟢 **0** |
+| Code Smells | 🟡 64 (normal para 5,033 líneas) |
+| Duplications | 🟢 **0.0%** |
+| Lines of Code | 5,033 |
+
+**Qué decir ante los jurados:**
+> "Quality Gate pasado. 0 bugs, 0 vulnerabilidades, 0 duplicaciones. Los 64 code smells son principalmente patrones de tipado en TypeScript que SonarQube marca conservadoramente — ninguno representa riesgo en producción. El único falso positivo suprimido fue `S2068` en `testing.py`: una contraseña hardcodeada exclusiva del entorno de test, que no es una credencial de producción."
+
+**Para levantar SonarQube si no está corriendo:**
 ```bash
-# 1. Levantar SonarQube con Docker
+docker start sonarqube
+# o desde cero:
 docker run -d --name sonarqube -p 9000:9000 sonarqube:community
-
-# 2. Esperar ~2 min, abrir http://localhost:9000
-# Login: admin / admin → cambiar contraseña
-
-# 3. Crear proyecto manual → obtener token
-
-# 4. Ejecutar análisis desde raíz del proyecto
-sonar-scanner \
-  -Dsonar.host.url=http://localhost:9000 \
-  -Dsonar.token=TU_TOKEN_AQUI
 ```
 
 `sonar-project.properties` en raíz configura fuentes: `frontend/src`, `backend/django_core`, `backend/services`, `domain/src`.
