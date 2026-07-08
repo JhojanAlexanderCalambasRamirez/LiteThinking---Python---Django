@@ -8,11 +8,6 @@ from .models import EmpresaModel
 
 
 class DjangoEmpresaRepository(EmpresaRepository):
-    """
-    Django ORM implementation of EmpresaRepository port.
-    Translates between domain entities and Django ORM models.
-    """
-
     def find_by_nit(self, nit: NIT) -> Empresa | None:
         try:
             model = EmpresaModel.objects.get(nit=str(nit))

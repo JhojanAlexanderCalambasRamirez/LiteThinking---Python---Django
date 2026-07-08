@@ -19,11 +19,6 @@ class UserRole(str, Enum):
 
 @dataclass
 class Usuario:
-    """
-    Core business entity representing an application user.
-    Stores only the password hash - never plaintext.
-    """
-
     email: EmailAddress
     password_hash: PasswordHash
     rol: UserRole

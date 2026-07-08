@@ -12,11 +12,6 @@ _VALID_CURRENCIES = frozenset(
 
 @dataclass(frozen=True)
 class Money:
-    """
-    Immutable monetary value with ISO 4217 currency code.
-    Uses Decimal for precision - never float for money.
-    """
-
     amount: Decimal
     currency: str
 

@@ -15,10 +15,6 @@ def generate_inventory_pdf(
     empresa_nombre: str,
     items: list[dict],
 ) -> bytes:
-    """
-    Generate an inventory PDF using ReportLab.
-    Returns the PDF as bytes for email attachment or direct download.
-    """
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,

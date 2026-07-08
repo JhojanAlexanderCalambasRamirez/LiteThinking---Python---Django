@@ -22,10 +22,6 @@ def send_inventory_email(
     filename: str = "inventario.pdf",
     items_count: int = 0,
 ) -> bool:
-    """
-    Send inventory PDF by email.
-    Supports SMTP, SendGrid, or log (demo mode - no real send).
-    """
     if _EMAIL_BACKEND == "sendgrid":
         return _send_via_sendgrid(recipient_email, empresa_nombre, pdf_bytes, filename, items_count)
     if _EMAIL_BACKEND == "log":
@@ -40,7 +36,6 @@ _MESES = [
 
 
 def _fecha_es() -> tuple[str, str]:
-    """Return (DD/MM/YYYY, 'DD de mes de YYYY') in Spanish."""
     now = datetime.now()
     corta = now.strftime("%d/%m/%Y")
     larga = f"{now.day} de {_MESES[now.month]} de {now.year}"

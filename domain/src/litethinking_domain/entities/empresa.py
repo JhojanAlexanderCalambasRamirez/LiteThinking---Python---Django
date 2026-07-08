@@ -12,11 +12,6 @@ def _utcnow() -> datetime:
 
 @dataclass
 class Empresa:
-    """
-    Core business entity representing a company.
-    No framework dependencies - pure Python.
-    """
-
     nit: NIT
     nombre: str
     direccion: str

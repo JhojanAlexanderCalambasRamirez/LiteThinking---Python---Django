@@ -23,10 +23,6 @@ logger = logging.getLogger(__name__)
 
 
 def _index_product_embedding(producto: ProductoModel) -> None:
-    """
-    Fire-and-forget: send product to AI agent for embedding indexing.
-    Never raises - product creation/update must not fail if agent is down.
-    """
     try:
         url = f"{settings.AI_AGENT_SERVICE_URL}/api/v1/agent/embeddings/upsert/"
         with httpx.Client(timeout=10.0) as client:

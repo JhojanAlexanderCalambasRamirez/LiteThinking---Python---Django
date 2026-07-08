@@ -28,12 +28,6 @@ class UserModelManager(BaseUserManager["UserModel"]):
 
 
 class UserModel(AbstractBaseUser, PermissionsMixin):
-    """
-    Django ORM model for Usuario.
-    Infrastructure layer - implements domain repository interface.
-    Maps to the `usuario` table defined in migrations.
-    """
-
     class RolChoices(models.TextChoices):
         ADMIN = "admin", "Administrador"
         EXTERNO = "externo", "Externo"

@@ -13,12 +13,6 @@ def _utcnow() -> datetime:
 
 @dataclass
 class Inventario:
-    """
-    Inventory entry tracking stock for a single product.
-    Business rule: quantity cannot be negative.
-    Empresa is resolved via producto_id → Producto → empresa_nit (avoid redundancy).
-    """
-
     producto_id: UUID
     cantidad: int
     created_by: UUID

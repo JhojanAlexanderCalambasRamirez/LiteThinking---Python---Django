@@ -24,10 +24,6 @@ REGLAS OBLIGATORIAS:
 
 
 def _get_llm():
-    """
-    Returns the configured LLM.
-    Priority: GROQ_API_KEY → ANTHROPIC_API_KEY → raises.
-    """
     try:
         groq_key = config("GROQ_API_KEY")
         from langchain_groq import ChatGroq
@@ -62,10 +58,6 @@ def build_inventory_agent(
     empresa_nit: str | None = None,
     empresa_nombre: str | None = None,
 ) -> tuple[AgentExecutor, list[dict]]:
-    """
-    Build a LangChain agent with pgvector semantic search tool.
-    Returns (executor, captured_products) — captured_products is populated after invoke().
-    """
     from services.embedding_service import semantic_search_productos
 
     captured_products: list[dict] = []
@@ -135,7 +127,6 @@ async def run_agent_query(
     empresa_nit: str | None = None,
     empresa_nombre: str | None = None,
 ) -> dict:
-    """Run a single query through the inventory agent. Returns response text + captured products."""
     try:
         agent_executor, captured_products = build_inventory_agent(db, empresa_nit, empresa_nombre)
         result = agent_executor.invoke({"input": query})

@@ -14,12 +14,6 @@ _VALID_PREFIXES = ("$2b$", "$2a$", "$argon2", "argon2$", "bcrypt$", "bcrypt_sha2
 
 @dataclass(frozen=True)
 class PasswordHash:
-    """
-    Opaque value object wrapping a hashed password string.
-    Domain only stores the hash - hashing/verification belongs to infrastructure.
-    Validates the hash has a recognized format to prevent storing plaintext.
-    """
-
     valor: str
 
     def __post_init__(self) -> None:

@@ -12,8 +12,6 @@ _EMAIL_PATTERN = re.compile(
 
 @dataclass(frozen=True)
 class EmailAddress:
-    """Validated, lowercase-normalized email address."""
-
     valor: str
 
     def __post_init__(self) -> None:

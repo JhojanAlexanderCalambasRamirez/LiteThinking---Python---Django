@@ -1,30 +1,24 @@
 class DomainException(Exception):
-    """Base for all domain exceptions."""
-
     def __init__(self, message: str) -> None:
         super().__init__(message)
         self.message = message
 
 
-# --- Value Object exceptions ---
-
 class InvalidNITError(DomainException):
-    """NIT does not match Colombian format (6-10 digits, optional '-' + check digit)."""
+    pass
 
 
 class InvalidEmailError(DomainException):
-    """Email address has invalid format."""
+    pass
 
 
 class InvalidMoneyError(DomainException):
-    """Money amount is negative or currency code is invalid."""
+    pass
 
 
 class InvalidPasswordHashError(DomainException):
-    """Password hash does not match expected bcrypt/argon2 format."""
+    pass
 
-
-# --- Empresa exceptions ---
 
 class EmpresaNotFoundError(DomainException):
     def __init__(self, nit: str) -> None:
@@ -35,8 +29,6 @@ class EmpresaAlreadyExistsError(DomainException):
     def __init__(self, nit: str) -> None:
         super().__init__(f"Empresa with NIT '{nit}' already exists.")
 
-
-# --- Producto exceptions ---
 
 class ProductoNotFoundError(DomainException):
     def __init__(self, identifier: str) -> None:
@@ -50,8 +42,6 @@ class ProductoAlreadyExistsError(DomainException):
         )
 
 
-# --- Usuario exceptions ---
-
 class UsuarioNotFoundError(DomainException):
     def __init__(self, email: str) -> None:
         super().__init__(f"Usuario with email '{email}' not found.")
@@ -61,8 +51,6 @@ class UsuarioAlreadyExistsError(DomainException):
     def __init__(self, email: str) -> None:
         super().__init__(f"Usuario with email '{email}' already exists.")
 
-
-# --- Inventario exceptions ---
 
 class InventarioNotFoundError(DomainException):
     def __init__(self, producto_id: str) -> None:
@@ -76,8 +64,6 @@ class InsufficientStockError(DomainException):
             f"requested {requested}, available {available}."
         )
 
-
-# --- Authorization exceptions ---
 
 class UnauthorizedOperationError(DomainException):
     def __init__(self, operation: str) -> None:

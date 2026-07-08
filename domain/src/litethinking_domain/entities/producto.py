@@ -15,11 +15,6 @@ def _utcnow() -> datetime:
 
 @dataclass
 class Producto:
-    """
-    Core business entity representing a product linked to a company.
-    Precios is a dict[currency_code → Money] enforcing one price per currency.
-    """
-
     codigo: str
     nombre: str
     empresa_nit: NIT

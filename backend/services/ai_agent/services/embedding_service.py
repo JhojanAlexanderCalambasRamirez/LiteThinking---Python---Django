@@ -23,7 +23,6 @@ def _get_model():
 
 
 def get_embedding(text_input: str) -> list[float]:
-    """Generate text embedding using sentence-transformers (local, no API key)."""
     model = _get_model()
     embedding = model.encode(text_input.replace("\n", " "), normalize_embeddings=True)
     return embedding.tolist()
@@ -35,10 +34,6 @@ def upsert_producto_embedding(
     nombre: str,
     caracteristicas: str | None,
 ) -> None:
-    """
-    Generate and store embedding for a product.
-    Text combines nombre + caracteristicas for richer semantic representation.
-    """
     combined_text = f"{nombre}. {caracteristicas or ''}"
     embedding = get_embedding(combined_text)
 
@@ -65,10 +60,6 @@ def semantic_search_productos(
     empresa_nit: str | None = None,
     top_k: int = 5,
 ) -> list[dict]:
-    """
-    Cosine similarity search using pgvector IVFFlat index.
-    Returns top_k most semantically similar products.
-    """
     query_embedding = get_embedding(query)
 
     empresa_filter = "AND p.empresa_nit = :empresa_nit" if empresa_nit else ""

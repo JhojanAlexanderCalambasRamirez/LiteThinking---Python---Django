@@ -15,10 +15,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 
 class RegisterUserView(generics.CreateAPIView):
-    """
-    Public: registers as 'externo' (rol forced, cannot self-assign admin).
-    Admin: can register any role by passing rol=admin.
-    """
     queryset = UserModel.objects.all()
     permission_classes = [AllowAny]
 

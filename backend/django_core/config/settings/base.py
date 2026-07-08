@@ -1,7 +1,3 @@
-"""
-Base Django settings shared across all environments.
-Environment-specific overrides live in development.py / production.py.
-"""
 from pathlib import Path
 
 from decouple import config

@@ -7,11 +7,6 @@ from django.db import models
 
 
 class InventarioModel(models.Model):
-    """
-    One inventory entry per product.
-    Empresa is derived via producto → empresa_nit (no redundant FK).
-    """
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     producto = models.OneToOneField(
         "products.ProductoModel",

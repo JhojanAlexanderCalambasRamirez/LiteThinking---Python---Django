@@ -1,8 +1,3 @@
-"""
-Blockchain audit service using web3.py.
-Records inventory operations as immutable on-chain events (Polygon Mumbai testnet).
-Falls back to local SHA256 hash log if chain is unavailable.
-"""
 from __future__ import annotations
 
 import hashlib
@@ -34,13 +29,6 @@ def record_inventory_event(
     action: str,
     data: dict,
 ) -> str:
-    """
-    Record an inventory event.
-    1. Computes SHA256 hash of the event data.
-    2. Attempts to write the hash on-chain (Polygon Mumbai).
-    3. Always persists to blockchain_log table (with or without tx_hash).
-    Returns the data_hash for verification.
-    """
     data_hash = _compute_data_hash({**data, "entity_type": entity_type, "action": action})
     tx_hash = None
     block_number = None

@@ -11,12 +11,6 @@ _TELEFONO_REGEX = r"^\+?[\d\s\-\(\)]{7,20}$"
 
 
 class EmpresaModel(models.Model):
-    """
-    Django ORM model for Empresa.
-    PK is NIT (natural business key, VARCHAR).
-    Validation in 3 layers: domain VO → serializer → DB CHECK constraint.
-    """
-
     nit = models.CharField(
         max_length=20,
         primary_key=True,

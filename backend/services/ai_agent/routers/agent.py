@@ -53,10 +53,6 @@ async def query_agent(
     payload: AgentQueryRequest,
     db: Session = Depends(get_db),
 ) -> dict:
-    """
-    Natural language query to the LangChain inventory agent.
-    The agent uses pgvector semantic search as a tool.
-    """
     result = await run_agent_query(db, payload.query, payload.empresa_nit, payload.empresa_nombre)
     return {
         "query": payload.query,
@@ -70,10 +66,6 @@ def semantic_search(
     payload: SemanticSearchRequest,
     db: Session = Depends(get_db),
 ) -> dict:
-    """
-    Direct pgvector semantic search without agent reasoning.
-    Useful for autocomplete and quick product lookups.
-    """
     results = semantic_search_productos(
         db, payload.query, payload.empresa_nit, payload.top_k
     )
@@ -85,10 +77,6 @@ def upsert_embedding(
     payload: EmbeddingUpsertRequest,
     db: Session = Depends(get_db),
 ) -> dict:
-    """
-    Generate and store/update embedding for a product.
-    Called by Django backend after product create/update.
-    """
     from uuid import UUID
 
     upsert_producto_embedding(
@@ -106,10 +94,6 @@ def get_blockchain_log(
     limit: int = Query(50, le=200),
     db: Session = Depends(get_db),
 ) -> dict:
-    """
-    Return recent blockchain audit log entries.
-    Filterable by entity_type: 'inventario' | 'empresa' | 'producto'
-    """
     condition = "WHERE entity_type = :entity_type" if entity_type else ""
     params: dict = {"limit": limit}
     if entity_type:

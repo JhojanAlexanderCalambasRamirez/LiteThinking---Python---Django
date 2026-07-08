@@ -4,8 +4,6 @@ from rest_framework.views import APIView
 
 
 class IsAdmin(BasePermission):
-    """Only admin rol users are allowed."""
-
     message = "Admin role required."
 
     def has_permission(self, request: Request, view: APIView) -> bool:
@@ -18,11 +16,6 @@ class IsAdmin(BasePermission):
 
 
 class IsAdminOrReadOnly(BasePermission):
-    """
-    Admin: all methods.
-    Externo (authenticated): GET only.
-    """
-
     def has_permission(self, request: Request, view: APIView) -> bool:
         if not request.user or not request.user.is_authenticated:
             return False

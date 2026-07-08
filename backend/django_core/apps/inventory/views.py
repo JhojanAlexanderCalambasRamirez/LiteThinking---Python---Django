@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 def _build_inventory_payload(empresa_nit: str) -> dict:
-    """Fetch inventory items for a company and build the microservice payload."""
     items_qs = (
         InventarioModel.objects.filter(producto__empresa_id=empresa_nit, cantidad__gt=0)
         .select_related("producto__empresa")
@@ -100,10 +99,6 @@ class InventarioDetailView(generics.RetrieveUpdateDestroyAPIView):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def confirmar_pedido(request: Request) -> Response:
-    """
-    Confirm an order: decrement inventory quantities atomically.
-    Body: { "items": [{"inventario_id": "uuid", "cantidad": int}] }
-    """
     items = request.data.get("items", [])
     if not items:
         return Response({"error": "items is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -141,10 +136,6 @@ def confirmar_pedido(request: Request) -> Response:
 @api_view(["POST"])
 @permission_classes([IsAdmin])
 def export_pdf_inventory(request: Request) -> HttpResponse:
-    """
-    Generate and stream inventory PDF directly to the browser.
-    Body: { "empresa_nit": "..." }
-    """
     empresa_nit = request.data.get("empresa_nit")
     if not empresa_nit:
         return Response({"error": "empresa_nit is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -182,10 +173,6 @@ def export_pdf_inventory(request: Request) -> HttpResponse:
 @api_view(["POST"])
 @permission_classes([IsAdmin])
 def export_and_email_inventory(request: Request) -> Response:
-    """
-    Generate inventory PDF and send it by email.
-    Body: { "empresa_nit": "...", "recipient_email": "..." }
-    """
     empresa_nit = request.data.get("empresa_nit")
     recipient_email = request.data.get("recipient_email")
 
