@@ -9,6 +9,7 @@ import { Pencil, Trash2, PlusCircle, CheckCircle, X, RotateCcw } from "lucide-re
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { Badge } from "@/components/atoms/Badge";
+import { Label } from "@/components/atoms/Label";
 import { CurrencyDisplay } from "@/components/molecules/CurrencyDisplay";
 import { Moneda, Producto } from "@/types";
 
@@ -167,9 +168,7 @@ export function ProductTable({
                       className="flex items-end gap-3"
                     >
                       <div className="w-40">
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Moneda
-                        </label>
+                        <Label className="text-xs text-gray-600 mb-1">Moneda</Label>
                         <select
                           {...register("moneda_codigo")}
                           className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
@@ -188,9 +187,7 @@ export function ProductTable({
                         )}
                       </div>
                       <div className="w-36">
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Precio
-                        </label>
+                        <Label className="text-xs text-gray-600 mb-1">Precio</Label>
                         <Input
                           {...register("precio")}
                           type="number"

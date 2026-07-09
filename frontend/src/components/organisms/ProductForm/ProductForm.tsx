@@ -8,6 +8,7 @@ import { X, PlusCircle } from "lucide-react";
 
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
+import { Label } from "@/components/atoms/Label";
 import { FormField } from "@/components/molecules/FormField";
 import { Empresa, Moneda, Producto } from "@/types";
 
@@ -125,7 +126,7 @@ export function ProductForm({
 
         {editing && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Código</label>
+            <Label className="mb-1">Código</Label>
             <span className="inline-flex items-center px-3 py-1.5 rounded-md bg-gray-100 font-mono text-sm text-gray-600 border border-gray-200">
               {editing.codigo}
             </span>
@@ -159,9 +160,9 @@ export function ProductForm({
 
         {!editing && (
           <div className="col-span-1 sm:col-span-2 space-y-3">
-            <label className="block text-sm font-medium text-gray-700">
+            <Label>
               Precios <span className="text-gray-400 font-normal">(opcional)</span>
-            </label>
+            </Label>
 
             {pendingPrecios.length > 0 && (
               <div className="flex flex-wrap gap-2">

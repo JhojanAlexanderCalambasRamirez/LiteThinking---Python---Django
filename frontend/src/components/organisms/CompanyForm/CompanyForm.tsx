@@ -13,7 +13,6 @@ function formatTelefono(raw: string): string {
   if (!digits.startsWith("57") && digits.length === 10) {
     return `+57 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
   }
-  // Keep original if pattern doesn't match
   return raw.trim();
 }
 
