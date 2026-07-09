@@ -97,7 +97,15 @@ export function ProductForm({
       )}
 
       <form
-        onSubmit={handleSubmit((values) => onSubmit(values, pendingPrecios))}
+        onSubmit={handleSubmit((values) => {
+          const flushed = [...pendingPrecios];
+          if (newMoneda && newPrecio && !isNaN(Number(newPrecio)) && Number(newPrecio) >= 0) {
+            if (!flushed.some((p) => p.moneda_codigo === newMoneda)) {
+              flushed.push({ moneda_codigo: newMoneda, precio: newPrecio });
+            }
+          }
+          return onSubmit(values, flushed);
+        })}
         className="grid grid-cols-1 sm:grid-cols-2 gap-4"
       >
         <FormField id="nombre" label="Nombre del producto" required error={errors.nombre?.message}>
