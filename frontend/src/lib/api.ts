@@ -27,7 +27,8 @@ api.interceptors.response.use(
       if (refresh) {
         try {
           const { data } = await axios.post(`${API_URL}/api/v1/auth/refresh/`, { refresh });
-          Cookies.set("access_token", data.access, { secure: true, sameSite: "strict" });
+          const secure = typeof window !== "undefined" && window.location.protocol === "https:";
+          Cookies.set("access_token", data.access, { secure, sameSite: "strict" });
           originalRequest.headers.Authorization = `Bearer ${data.access}`;
           return api(originalRequest);
         } catch {
