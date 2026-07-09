@@ -23,7 +23,10 @@ Aplicación full-stack empresarial: gestión de empresas, productos e inventario
 
 - Python 3.11+
 - Node.js 18+
-- PostgreSQL 15+ con extensión `pgvector`
+- PostgreSQL 15+
+- pgvector — extensión PostgreSQL para embeddings vectoriales:
+  - macOS: `brew install pgvector`
+  - Ubuntu/Debian: `sudo apt install postgresql-15-pgvector`
 - Poetry:
 
 ```bash
@@ -41,29 +44,50 @@ export PATH="$HOME/.local/bin:$PATH"
 cp .env.example .env
 ```
 
-Mínimo requerido en `.env`:
+Edita `.env` con tus valores. Campos obligatorios:
 
 ```env
+# Base de datos
 DB_NAME=litethinking_db
 DB_USER=tu_usuario_postgres
-DB_PASSWORD=
+DB_PASSWORD=tu_password
 DB_HOST=localhost
 DB_PORT=5432
-DATABASE_URL=postgresql://tu_usuario@localhost:5432/litethinking_db
+DATABASE_URL=postgresql://tu_usuario:tu_password@localhost:5432/litethinking_db
 
-DJANGO_SECRET_KEY=cambia-esto-por-una-clave-larga-aleatoria
+# Django
+DJANGO_SECRET_KEY=cambia-esto-por-una-clave-larga-y-aleatoria
 
-# Agente — obtener gratis en console.groq.com
+# Agente IA — pon al menos uno (GROQ es gratuito: console.groq.com)
 GROQ_API_KEY=gsk_tu_clave_aqui
+# ANTHROPIC_API_KEY=sk-ant-tu_clave_aqui
+
+# Email PDF (opcional — sin esto el envío por email no funciona, el PDF sí)
+# EMAIL_BACKEND=smtp
+# SMTP_USER=tu_email@gmail.com
+# SMTP_PASSWORD=tu_app_password
 ```
 
 ### 2. Base de datos
 
 ```bash
+# Crear la base de datos
 createdb litethinking_db
-psql -d litethinking_db -c "CREATE EXTENSION IF NOT EXISTS vector;"
-psql -U postgres -d litethinking_db -f database/migrations/V1__initial_schema.sql
-psql -U postgres -d litethinking_db -f database/seeds/V2__seed_data.sql
+
+# Tablas gestionadas por Django ORM (empresa, usuario, producto, inventario…)
+cd backend/django_core
+poetry install
+poetry run python manage.py migrate
+
+# Tablas extra: blockchain_log, producto_embedding (pgvector), email_log
+psql -U postgres -d litethinking_db -f ../../database/migrations/V3__extra_tables.sql
+
+# Datos iniciales: monedas ISO 4217 + empresa de ejemplo
+psql -U postgres -d litethinking_db -f ../../database/seeds/V2__seed_data.sql
+
+# Usuarios por defecto (admin + externo)
+poetry run python manage.py seed_users
+cd ../..
 ```
 
 ### 3. Dominio (paquete Python independiente)
@@ -72,15 +96,7 @@ psql -U postgres -d litethinking_db -f database/seeds/V2__seed_data.sql
 cd domain && poetry install && cd ..
 ```
 
-### 4. Backend Django
-
-```bash
-cd backend/django_core
-poetry install
-poetry run python manage.py migrate
-poetry run python manage.py seed_users
-cd ../..
-```
+### 4. Microservicio Inventario
 
 ### 5. Microservicio Inventario
 
