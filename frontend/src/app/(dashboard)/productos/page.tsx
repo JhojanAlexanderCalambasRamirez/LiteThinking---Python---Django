@@ -53,8 +53,11 @@ export default function ProductosPage() {
       toast.success("Producto creado exitosamente.");
     },
     onError: (err: unknown) => {
-      const detail = (err as { response?: { data?: Record<string, string[]> } })?.response?.data;
-      setMutationError(detail ? JSON.stringify(detail) : "Error al crear producto.");
+      const detail = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
+      const msg = detail
+        ? (Object.values(detail).flat() as string[]).join(" ")
+        : "Error al crear producto.";
+      setMutationError(msg);
     },
   });
 
@@ -68,8 +71,11 @@ export default function ProductosPage() {
       toast.success("Producto actualizado.");
     },
     onError: (err: unknown) => {
-      const detail = (err as { response?: { data?: Record<string, string[]> } })?.response?.data;
-      setMutationError(detail ? JSON.stringify(detail) : "Error al actualizar producto.");
+      const detail = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
+      const msg = detail
+        ? (Object.values(detail).flat() as string[]).join(" ")
+        : "Error al actualizar producto.";
+      setMutationError(msg);
     },
   });
 
@@ -88,12 +94,14 @@ export default function ProductosPage() {
       queryClient.invalidateQueries({ queryKey: ["productos"] });
       toast.success("Producto reactivado.");
     },
+    onError: () => toast.error("No se pudo reactivar el producto."),
   });
 
   const addPrecioMutation = useMutation({
     mutationFn: ({ productoId, data }: { productoId: string; data: PrecioFormValues }) =>
       productosApi.addPrecio(productoId, { moneda_codigo: data.moneda_codigo, precio: Number(data.precio) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["productos"] }),
+    onError: () => toast.error("No se pudo agregar el precio. Verifica que la moneda no esté duplicada."),
   });
 
   const handleFormSubmit = async (values: ProductoFormValues, precios: PendingPrecio[]) => {

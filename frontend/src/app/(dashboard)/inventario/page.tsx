@@ -10,6 +10,7 @@ import { z } from "zod";
 import { DashboardTemplate } from "@/components/templates/DashboardTemplate";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
+import { Label } from "@/components/atoms/Label";
 import { FormField } from "@/components/molecules/FormField";
 import { InventoryTable } from "@/components/organisms/InventoryTable";
 import { inventarioApi, empresasApi } from "@/lib/api";
@@ -109,9 +110,9 @@ export default function InventarioPage() {
         {/* Filters */}
         <div className="bg-white rounded-xl border p-4 flex gap-4 items-end">
           <div className="flex-1">
-            <label htmlFor="empresa-filter" className="block text-sm font-medium text-gray-700 mb-1">
+            <Label htmlFor="empresa-filter" className="mb-1">
               Filtrar por empresa
-            </label>
+            </Label>
             <select
               id="empresa-filter"
               value={selectedEmpresa}
