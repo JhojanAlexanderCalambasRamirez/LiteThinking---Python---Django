@@ -19,6 +19,28 @@ Aplicación full-stack empresarial: gestión de empresas, productos e inventario
 
 ---
 
+## Instalación rápida (desde cero)
+
+Si el equipo no tiene ningún prerequisito instalado (Python, Node, PostgreSQL, Poetry…), el script de aprovisionamiento instala y configura todo automáticamente.
+
+Soporta **macOS** (Homebrew) y **Ubuntu/Debian** (apt).
+
+```bash
+bash setup.sh
+```
+
+El script:
+1. Instala Python 3.13, Node 20, PostgreSQL 17 y pgvector
+2. Instala Poetry
+3. Crea `.env` desde `.env.example` y te pide que lo edites
+4. Crea la base de datos y corre migraciones
+5. Instala todas las dependencias Python y npm
+6. Crea los usuarios por defecto (admin + externo)
+
+Al finalizar imprime cómo levantar los 4 servicios.
+
+---
+
 ## Requisitos previos
 
 - Python 3.11+
