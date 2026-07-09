@@ -14,8 +14,9 @@ export function getAccessToken(): string | null {
 }
 
 export function setTokens(access: string, refresh: string): void {
-  Cookies.set("access_token", access, { secure: true, sameSite: "strict", expires: 1 });
-  Cookies.set("refresh_token", refresh, { secure: true, sameSite: "strict", expires: 7 });
+  const secure = typeof window !== "undefined" && window.location.protocol === "https:";
+  Cookies.set("access_token", access, { secure, sameSite: "strict", expires: 1 });
+  Cookies.set("refresh_token", refresh, { secure, sameSite: "strict", expires: 7 });
 }
 
 export function clearTokens(): void {
