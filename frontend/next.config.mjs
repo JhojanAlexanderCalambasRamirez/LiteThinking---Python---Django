@@ -45,7 +45,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self' data:",
               "img-src 'self' data: blob:",
-              "connect-src 'self' http://100.24.125.191:8000 http://100.24.125.191:8002 http://localhost:8000 http://localhost:8002",
+              "connect-src 'self' http://localhost:8000 http://localhost:8002",
               "frame-ancestors 'self'",
             ].join("; "),
           },
