@@ -78,6 +78,7 @@ cd domain && poetry install && cd ..
 cd backend/django_core
 poetry install
 poetry run python manage.py migrate
+poetry run python manage.py seed_users
 cd ../..
 ```
 
@@ -402,7 +403,6 @@ LiteThinking-Python-React/
 │   └── seeds/V2__seed_data.sql
 │
 ├── sonar-project.properties
-├── GUIA_SUSTENTACION.md
 └── README.md
 ```
 
@@ -410,4 +410,4 @@ LiteThinking-Python-React/
 
 ## Autor
 
-**Jhojan Alexander Calamabas Ramírez**
+Jhojan Alexander Calambas Ramírez
