@@ -7,12 +7,6 @@ from litethinking_domain.value_objects import NIT
 
 
 class EmpresaRepository(ABC):
-    """
-    Port (abstract interface) for Empresa persistence.
-    Implementations live in infrastructure (Django ORM, SQLAlchemy, etc.).
-    Domain layer has zero knowledge of how data is stored.
-    """
-
     @abstractmethod
     def find_by_nit(self, nit: NIT) -> Empresa | None: ...
 
@@ -26,5 +20,4 @@ class EmpresaRepository(ABC):
     def save(self, empresa: Empresa) -> Empresa: ...
 
     @abstractmethod
-    def delete(self, nit: NIT) -> None:
-        """Soft delete - sets activo=False."""
+    def delete(self, nit: NIT) -> None: ...

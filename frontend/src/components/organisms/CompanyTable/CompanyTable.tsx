@@ -1,18 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/atoms/Badge";
 import { Button } from "@/components/atoms/Button";
 import { Empresa } from "@/types";
 
 interface CompanyTableProps {
-  empresas: Empresa[];
-  isAdmin: boolean;
-  onEdit?: (empresa: Empresa) => void;
-  onDelete?: (nit: string) => void;
+  readonly empresas: Empresa[];
+  readonly isAdmin: boolean;
+  readonly onEdit?: (empresa: Empresa) => void;
+  readonly onDelete?: (nit: string) => void;
 }
 
 export function CompanyTable({ empresas, isAdmin, onEdit, onDelete }: CompanyTableProps) {
+  const [confirmDeleteNit, setConfirmDeleteNit] = useState<string | null>(null);
+
   if (!empresas.length) {
     return (
       <div className="text-center py-12 text-gray-500">
@@ -47,14 +50,32 @@ export function CompanyTable({ empresas, isAdmin, onEdit, onDelete }: CompanyTab
               </td>
               {isAdmin && (
                 <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onEdit?.(empresa)} aria-label={`Editar ${empresa.nombre}`}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="danger" size="sm" onClick={() => onDelete?.(empresa.nit)} aria-label={`Eliminar ${empresa.nombre}`}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {confirmDeleteNit === empresa.nit ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-600">¿Desactivar?</span>
+                      <button
+                        onClick={() => { onDelete?.(empresa.nit); setConfirmDeleteNit(null); }}
+                        className="text-xs text-red-600 font-medium hover:underline"
+                      >
+                        Sí
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteNit(null)}
+                        className="text-xs text-gray-500 hover:underline"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => onEdit?.(empresa)} aria-label={`Editar ${empresa.nombre}`}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => setConfirmDeleteNit(empresa.nit)} aria-label={`Eliminar ${empresa.nombre}`}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </td>
               )}
             </tr>

@@ -55,7 +55,7 @@ export default function ProductosPage() {
     onError: (err: unknown) => {
       const detail = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
       const msg = detail
-        ? (Object.values(detail).flat() as string[]).join(" ")
+        ? Object.values(detail).flat().map(String).join(" ")
         : "Error al crear producto.";
       setMutationError(msg);
     },
@@ -73,7 +73,7 @@ export default function ProductosPage() {
     onError: (err: unknown) => {
       const detail = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
       const msg = detail
-        ? (Object.values(detail).flat() as string[]).join(" ")
+        ? Object.values(detail).flat().map(String).join(" ")
         : "Error al actualizar producto.";
       setMutationError(msg);
     },

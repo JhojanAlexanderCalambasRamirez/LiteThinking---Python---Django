@@ -38,11 +38,11 @@ export default function EmpresasPage() {
       toast.success("Empresa registrada exitosamente.");
     },
     onError: (err: unknown) => {
-      const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
-      const msg = data
-        ? Object.values(data).flat().join(" ")
+      const detail = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
+      const msg = detail
+        ? Object.values(detail).flat().map(String).join(" ")
         : "Error al crear la empresa.";
-      setFormError(msg as string);
+      setFormError(msg);
     },
   });
 
@@ -56,11 +56,11 @@ export default function EmpresasPage() {
       toast.success("Empresa actualizada exitosamente.");
     },
     onError: (err: unknown) => {
-      const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
-      const msg = data
-        ? Object.values(data).flat().join(" ")
+      const detail = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
+      const msg = detail
+        ? Object.values(detail).flat().map(String).join(" ")
         : "Error al actualizar la empresa.";
-      setFormError(msg as string);
+      setFormError(msg);
     },
   });
 
@@ -74,9 +74,6 @@ export default function EmpresasPage() {
   });
 
   const handleEdit = (empresa: Empresa) => { setEditingEmpresa(empresa); setFormError(null); };
-  const handleDelete = (nit: string) => {
-    if (confirm("¿Desactivar esta empresa?")) deleteMutation.mutate(nit);
-  };
 
   return (
     <DashboardTemplate
@@ -124,7 +121,7 @@ export default function EmpresasPage() {
           empresas={data ?? []}
           isAdmin={admin}
           onEdit={handleEdit}
-          onDelete={handleDelete}
+          onDelete={(nit) => deleteMutation.mutate(nit)}
         />
       )}
     </DashboardTemplate>
