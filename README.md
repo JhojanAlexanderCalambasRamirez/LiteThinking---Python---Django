@@ -6,47 +6,52 @@ Aplicación full-stack empresarial: gestión de empresas, productos e inventario
 
 ## Demo en producción (AWS)
 
-| Recurso       | Valor                                                                                      |
-|---------------|--------------------------------------------------------------------------------------------|
-| URL pública   | <http://100.24.125.191>                                                                    |
-| Repositorio   | <https://github.com/JhojanAlexanderCalambasRamirez/LiteThinking---Python---Django>         |
+| Recurso            | Valor                                                                                |
+|--------------------|--------------------------------------------------------------------------------------|
+| URL pública HTTPS  | <https://100.24.125.191.nip.io>                                                      |
+| URL pública HTTP   | <http://100.24.125.191>                                                              |
+| Repositorio        | <https://github.com/JhojanAlexanderCalambasRamirez/LiteThinking---Python---Django>   |
 
 ```text
 Admin:   admin@litethinking.com   / Admin1234!
 Externo: externo@litethinking.com / Externo1234!
 ```
 
-> La IP pública pertenece a una instancia EC2 m7i-flex.large en AWS us-east-1.
-> No apagar la instancia para que el link permanezca activo.
+> Infraestructura: EC2 m7i-flex.large (8 GB RAM, 2 vCPU) + RDS PostgreSQL 16.4 — AWS us-east-1.
+> No apagar la instancia para que los links permanezcan activos.
 
 ---
 
 ## Ramas
 
-| Rama        | Propósito                                                             |
-|-------------|-----------------------------------------------------------------------|
-| `main`      | Desarrollo local — configuración para `localhost`                     |
-| `produccion`| Despliegue AWS — cookies HTTP-safe, build de producción Next.js       |
+| Rama          | Propósito                                                                 |
+|---------------|---------------------------------------------------------------------------|
+| `main`        | Desarrollo local — configuración para `localhost`                         |
+| `produccion`  | Despliegue AWS — HTTPS, cookies HTTP-safe, headers de seguridad, CSP      |
 
 **Diferencias de `produccion` respecto a `main`:**
 
-- Cookie `secure` condicional según protocolo (HTTP o HTTPS) — necesario para despliegue sin TLS
+- Cookie `secure` condicional según protocolo (HTTP en local, HTTPS en producción)
+- `NEXT_PUBLIC_API_URL` y `NEXT_PUBLIC_AI_AGENT_URL` apuntan al dominio HTTPS
+- Headers de seguridad: `Content-Security-Policy`, `X-Frame-Options`, `COOP`, `CORP`, `Referrer-Policy`
+- CSP `connect-src 'self'` (todo el tráfico pasa por nginx como reverse proxy)
 - Auto-flush de precio no confirmado al crear producto (UX fix)
 
 ---
 
 ## Stack
 
-| Capa | Tecnología |
-|------|-----------|
+| Capa | Descripcion |
+| --- | --- |
 | Frontend | Next.js 14, TypeScript, Tailwind CSS, TanStack Query, Atomic Design |
 | Backend principal | Django 5 + Django REST Framework |
 | Microservicio inventario | FastAPI — PDF (ReportLab) + Email (SMTP) |
 | Microservicio agente | FastAPI — LangChain + Groq/Anthropic + pgvector |
 | Base de datos | PostgreSQL + pgvector (embeddings vectoriales) |
 | Dominio | Python puro, Poetry — sin dependencias de framework |
-| Autenticación | JWT (access 60min + refresh 7 días) + bcrypt |
+| Autenticacion | JWT (access 60 min + refresh 7 dias) + bcrypt |
 | Blockchain | SHA-256 audit trail + web3.py (Polygon Mumbai ready) |
+| Infraestructura AWS | EC2 m7i-flex.large, RDS PostgreSQL 16.4, nginx, PM2, systemd |
 
 ---
 
@@ -101,7 +106,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ---
 
-## Instalación
+## Instalación manual
 
 ### 1. Variables de entorno
 
@@ -163,20 +168,18 @@ cd domain && poetry install && cd ..
 
 ### 4. Microservicio Inventario
 
-### 5. Microservicio Inventario
-
 ```bash
 cd backend/services/inventory_service && poetry install && cd ../../..
 ```
 
-### 6. Microservicio Agente
+### 5. Microservicio Agente
 
 ```bash
 cd backend/services/ai_agent && poetry install && cd ../../..
 # El modelo de embeddings (~200MB) se descarga en el primer uso
 ```
 
-### 7. Frontend
+### 6. Frontend
 
 ```bash
 cd frontend && npm install && cd ..
@@ -210,23 +213,23 @@ cd backend/django_core && poetry run python manage.py reindex_embeddings
 
 ---
 
-## URLs
+## URLs locales
 
-| Servicio | URL |
-|---------|-----|
-| **Aplicación** | http://localhost:3000 |
-| **Django API** | http://localhost:8000/api/v1/ |
-| **Django Admin** | http://localhost:8000/admin/ |
-| **Inventory Docs** | http://localhost:8001/docs |
-| **Agent Docs** | <http://localhost:8002/docs> |
+| Servicio         | URL                                |
+|------------------|------------------------------------|
+| Aplicación       | <http://localhost:3000>            |
+| Django API       | <http://localhost:8000/api/v1/>    |
+| Django Admin     | <http://localhost:8000/admin/>     |
+| Inventory Docs   | <http://localhost:8001/docs>       |
+| Agent Docs       | <http://localhost:8002/docs>       |
 
 ---
 
 ## Credenciales por defecto
 
-```
-Admin:    admin@litethinking.com   / Admin1234!
-Externo:  externo@litethinking.com / Externo1234!
+```text
+Admin:   admin@litethinking.com   / Admin1234!
+Externo: externo@litethinking.com / Externo1234!
 ```
 
 ---
@@ -271,14 +274,14 @@ Vista `/auditoria` (solo admin): tabla de todas las operaciones críticas con ha
 
 ### Auth (Django :8000)
 
-```
+```text
 POST /api/v1/auth/login/       { email, password } → { access, refresh }
 POST /api/v1/auth/refresh/     { refresh } → { access }
 ```
 
 ### Empresas
 
-```
+```text
 GET    /api/v1/empresas/
 POST   /api/v1/empresas/           (admin)
 GET    /api/v1/empresas/{nit}/
@@ -288,7 +291,7 @@ DELETE /api/v1/empresas/{nit}/     (admin — soft delete)
 
 ### Productos
 
-```
+```text
 GET    /api/v1/productos/          ?empresa=NIT
 POST   /api/v1/productos/          (admin)
 PATCH  /api/v1/productos/{id}/     (admin)
@@ -299,7 +302,7 @@ GET    /api/v1/monedas/
 
 ### Inventario
 
-```
+```text
 GET    /api/v1/inventario/              ?empresa=NIT
 POST   /api/v1/inventario/             (admin)
 PATCH  /api/v1/inventario/{id}/        (admin)
@@ -310,7 +313,7 @@ POST   /api/v1/inventario/export-email/ { empresa_nit, recipient_email }
 
 ### Agente (FastAPI :8002)
 
-```
+```text
 POST /api/v1/agent/query/              { query, empresa_nit?, empresa_nombre? }
 POST /api/v1/agent/search/             { query, empresa_nit?, top_k? }
 POST /api/v1/agent/embeddings/upsert/  { producto_id, nombre, caracteristicas }
@@ -323,7 +326,7 @@ GET  /api/v1/blockchain/log/           ?entity_type=inventario&limit=50
 
 Cada operación crítica (crear/editar/eliminar empresa, producto o inventario) genera:
 
-```
+```text
 payload = { datos del evento }
 data_hash = SHA-256(JSON.dumps(payload, sort_keys=True))
 → INSERT INTO blockchain_log (entity_type, entity_id, accion, data_hash)
@@ -337,7 +340,7 @@ La infraestructura para anclar hashes en Polygon Mumbai (web3.py) está implemen
 
 ## Arquitectura — Clean Architecture
 
-```
+```text
 domain/                 ← Entidades + Value Objects + Repositorios ABC
                           Sin imports de Django, FastAPI, SQLAlchemy
 backend/django_core/    ← Capa aplicación + infraestructura
@@ -349,6 +352,11 @@ backend/django_core/    ← Capa aplicación + infraestructura
 backend/services/       ← Microservicios independientes
   inventory_service/    ← PDF + email (ReportLab + SMTP)
   ai_agent/             ← pgvector + LangChain + blockchain log GET
+      routers/agent.py
+      services/
+          embedding_service.py
+          langchain_agent.py
+          blockchain_service.py
 frontend/               ← Next.js 14, Atomic Design
   atoms → molecules → organisms → templates → pages
 ```
@@ -393,17 +401,19 @@ cd backend/django_core && poetry run pytest -v
 
 ---
 
-## Rendimiento — GTmetrix
+## Rendimiento — Lighthouse / GTmetrix
 
-URL pública: https://lite-thinking-python-django.vercel.app/login
+URL analizada: <https://100.24.125.191.nip.io>
 
-| Métrica | Resultado |
-|---------|-----------|
-| Performance | **100%** |
-| Structure | **100%** |
-| LCP | 592ms |
-| TBT | 0ms |
-| CLS | 0 |
+| Métrica               | Resultado   |
+|-----------------------|-------------|
+| Performance           | **100**     |
+| Accesibilidad         | **100**     |
+| Prácticas recomendadas| **100**     |
+| SEO                   | **100**     |
+| LCP                   | < 600 ms    |
+| TBT                   | 0 ms        |
+| CLS                   | 0           |
 
 ---
 
@@ -422,21 +432,21 @@ Configuración en `sonar-project.properties` (raíz del proyecto).
 
 **Resultados del análisis (5,033 líneas):**
 
-| Métrica | Resultado |
-|---------|-----------|
-| Quality Gate | **Passed** |
-| Bugs | 0 |
-| Vulnerabilities | 0 |
-| Security Hotspots | 0 |
-| Code Smells | 64 |
-| Duplications | 0.0% |
-| Lines of Code | 5,033 |
+| Métrica          | Resultado    |
+|------------------|--------------|
+| Quality Gate     | **Passed**   |
+| Bugs             | 0            |
+| Vulnerabilities  | 0            |
+| Security Hotspots| 0            |
+| Code Smells      | 64           |
+| Duplications     | 0.0%         |
+| Lines of Code    | 5,033        |
 
 ---
 
 ## Estructura del proyecto
 
-```
+```text
 LiteThinking-Python-React/
 ├── domain/                          # Paquete Poetry — capa dominio pura
 │   ├── pyproject.toml
@@ -480,9 +490,14 @@ LiteThinking-Python-React/
 │           └── templates/           # AuthTemplate, DashboardTemplate
 │
 ├── database/
-│   ├── migrations/V1__initial_schema.sql
-│   └── seeds/V2__seed_data.sql
+│   ├── migrations/
+│   │   ├── V1__initial_schema.sql   # Esquema completo (referencia)
+│   │   └── V3__extra_tables.sql     # blockchain_log, produto_embedding, email_log
+│   └── seeds/
+│       └── V2__seed_data.sql        # Monedas ISO 4217 + empresa ejemplo
 │
+├── setup.sh                         # Aprovisionamiento macOS/Linux
+├── setup.ps1                        # Aprovisionamiento Windows
 ├── sonar-project.properties
 └── README.md
 ```
