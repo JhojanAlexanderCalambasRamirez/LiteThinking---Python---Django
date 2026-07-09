@@ -4,6 +4,7 @@ import logging
 
 import httpx
 from django.conf import settings
+from django.db import transaction
 from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -60,11 +61,12 @@ class ProductoListCreateView(generics.ListCreateAPIView):
         except (ValueError, TypeError):
             cantidad_inicial = 1
 
-        producto = serializer.save()
-        InventarioModel.objects.get_or_create(
-            producto=producto,
-            defaults={"cantidad": cantidad_inicial, "created_by": self.request.user},
-        )
+        with transaction.atomic():
+            producto = serializer.save()
+            InventarioModel.objects.get_or_create(
+                producto=producto,
+                defaults={"cantidad": cantidad_inicial, "created_by": self.request.user},
+            )
         _index_product_embedding(producto)
         log_blockchain(
             "producto",

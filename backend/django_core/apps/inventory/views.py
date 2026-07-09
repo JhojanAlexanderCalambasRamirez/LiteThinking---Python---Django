@@ -12,6 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from litethinking_domain.exceptions import InsufficientStockError
+
 from apps.users.permissions import IsAdmin, IsAdminOrReadOnly
 from utils.blockchain import log_blockchain
 
@@ -112,9 +114,8 @@ def confirmar_pedido(request: Request) -> Response:
                 if cantidad_solicitada <= 0:
                     raise ValueError(f"Cantidad inválida para {inv.producto.nombre}.")
                 if inv.cantidad < cantidad_solicitada:
-                    raise ValueError(
-                        f"Stock insuficiente para {inv.producto.nombre}. "
-                        f"Disponible: {inv.cantidad}, solicitado: {cantidad_solicitada}."
+                    raise InsufficientStockError(
+                        str(inv.producto.id), cantidad_solicitada, inv.cantidad
                     )
                 inv.cantidad -= cantidad_solicitada
                 inv.save(update_fields=["cantidad", "updated_at"])
@@ -129,6 +130,8 @@ def confirmar_pedido(request: Request) -> Response:
         return Response({"ok": True, "resultados": resultados}, status=status.HTTP_200_OK)
     except InventarioModel.DoesNotExist:
         return Response({"error": "Producto de inventario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+    except InsufficientStockError as exc:
+        return Response({"error": exc.message}, status=status.HTTP_400_BAD_REQUEST)
     except ValueError as exc:
         return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
