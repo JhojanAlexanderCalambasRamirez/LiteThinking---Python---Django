@@ -4,6 +4,37 @@ Aplicación full-stack empresarial: gestión de empresas, productos e inventario
 
 ---
 
+## Demo en producción (AWS)
+
+| Recurso       | Valor                                                                                      |
+|---------------|--------------------------------------------------------------------------------------------|
+| URL pública   | <http://100.24.125.191>                                                                    |
+| Repositorio   | <https://github.com/JhojanAlexanderCalambasRamirez/LiteThinking---Python---Django>         |
+
+```text
+Admin:   admin@litethinking.com   / Admin1234!
+Externo: externo@litethinking.com / Externo1234!
+```
+
+> La IP pública pertenece a una instancia EC2 m7i-flex.large en AWS us-east-1.
+> No apagar la instancia para que el link permanezca activo.
+
+---
+
+## Ramas
+
+| Rama        | Propósito                                                             |
+|-------------|-----------------------------------------------------------------------|
+| `main`      | Desarrollo local — configuración para `localhost`                     |
+| `produccion`| Despliegue AWS — cookies HTTP-safe, build de producción Next.js       |
+
+**Diferencias de `produccion` respecto a `main`:**
+
+- Cookie `secure` condicional según protocolo (HTTP o HTTPS) — necesario para despliegue sin TLS
+- Auto-flush de precio no confirmado al crear producto (UX fix)
+
+---
+
 ## Stack
 
 | Capa | Tecnología |
