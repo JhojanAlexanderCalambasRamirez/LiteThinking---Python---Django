@@ -8,8 +8,7 @@ Aplicación full-stack empresarial: gestión de empresas, productos e inventario
 
 | Recurso            | Valor                                                                                |
 |--------------------|--------------------------------------------------------------------------------------|
-| URL pública HTTPS  | <https://100.24.125.191.nip.io>                                                      |
-| URL pública HTTP   | <http://100.24.125.191>                                                              |
+| URL pública HTTPS  | <https://100.57.100.132.nip.io>                                                      |
 | Repositorio        | <https://github.com/JhojanAlexanderCalambasRamirez/LiteThinking---Python---Django>   |
 
 ```text
@@ -403,7 +402,7 @@ cd backend/django_core && poetry run pytest -v
 
 ## Rendimiento — Lighthouse / GTmetrix
 
-URL analizada: <https://100.24.125.191.nip.io>
+URL analizada: <https://100.57.100.132.nip.io>
 
 | Métrica               | Resultado   |
 |-----------------------|-------------|
